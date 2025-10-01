@@ -44,7 +44,7 @@ def get_and_clean_article_content(url):
 if __name__ == '__main__':
     print("--- content_scraper.py 단위 테스트 시작 ---")
     
-    test_url = "https://www.h2news.kr/news/articleView.html?idxno=11140"
+    test_url = "https://www.h2news.kr/news/articleView.html?idxno=13669"
     
     content = get_and_clean_article_content(test_url)
     
