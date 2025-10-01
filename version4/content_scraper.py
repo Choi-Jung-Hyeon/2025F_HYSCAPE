@@ -1,40 +1,24 @@
-# content_scraper.py
+# content_scraper.py (v2 - newspaper3k)
 
-import requests
-from bs4 import BeautifulSoup
-import re
+from newspaper import Article
 import time
 
 def get_and_clean_article_content(url):
-    for attempt in range(3):
+    for attempt in range(2):
         try:
-            headers = {
-                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
-            }
+            article = Article(url, language='ko')
             
-            response = requests.get(url, headers=headers, timeout=15)
-            response.raise_for_status()
+            article.download()
+            article.parse()
             
-            soup = BeautifulSoup(response.text, 'html.parser')
-            
-            # 1. 본문 추출
-            paragraphs = soup.find_all('p')
-            
-            # 2. 텍스트 가공
-            content_list = []
-            for p in paragraphs:
-                text = p.get_text(strip=True)
-                if len(text.split()) > 10:
-                    content_list.append(text)
-            
-            clean_content = ' '.join(content_list)
-            
-            clean_content = re.sub(r'[^\w\s가-힣]', '', clean_content)
-            
-            return clean_content
+            if article.text and len(article.text) > 100:
+                return article.text
+            else:
+                print(f"  [정보] 기사 내용이 너무 짧아 건너뜁니다.")
+                break
 
         except Exception as e:
-            print(f"  [오류] 본문 추출 실패 (시도 {attempt + 1}/3): {url}")
+            print(f"  [오류] 본문 추출 실패 (시도 {attempt + 1}/2): {url}")
             print(f"  오류 내용: {e}")
             time.sleep(2)
             
@@ -42,16 +26,22 @@ def get_and_clean_article_content(url):
 
 # 단위 테스트 코드
 if __name__ == '__main__':
-    print("--- content_scraper.py 단위 테스트 시작 ---")
+    print("--- content_scraper.py (v2) 단위 테스트 시작 ---")
     
-    test_url = "https://www.h2news.kr/news/articleView.html?idxno=13669"
+    test_urls = [
+        "https://www.e-kea.com/news/articleView.html?idxno=36659",
+        "http://www.en-e.kr/news/articleView.html?idxno=21149", #
+        "https://www.news1.kr/articles/?5246757"
+    ]
     
-    content = get_and_clean_article_content(test_url)
-    
-    if content:
-        print("\n[추출된 본문 내용 (일부)]")
-        print(content[:400] + "...")
-    else:
-        print("\n본문 내용을 추출하는 데 실패했습니다.")
+    for test_url in test_urls:
+        print(f"\n[테스트 URL]: {test_url}")
+        content = get_and_clean_article_content(test_url)
+        
+        if content:
+            print("[추출 성공 ✅]")
+            print(content[:200] + "...")
+        else:
+            print("[추출 실패 ❗️]")
         
     print("\n--- 단위 테스트 종료 ---")
