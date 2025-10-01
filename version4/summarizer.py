@@ -1,16 +1,16 @@
-# 파일명: summarizer.py
+# summarizer.py
 
 import google.generativeai as genai
 from config import GOOGLE_API_KEY
 
 def get_summary_and_keywords(title, content):
-    if not GOOGLE_API_KEY or GOOGLE_API_KEY == "AIzaSyBtsEROjvmN27jGHboUmfZTEAhk5wk1NoY":
+    if not GOOGLE_API_KEY:
         print("[오류] Gemini API 키가 config.py에 설정되지 않았습니다.")
         return "Gemini API 키가 설정되지 않았습니다.", ""
 
     try:
         genai.configure(api_key=GOOGLE_API_KEY)
-        model = genai.GenerativeModel('gemini-pro')
+        model = genai.GenerativeModel('gemini-2.5-flash')
 
         prompt = f"""
         당신은 수소 에너지 전문 애널리스트입니다. 다음 뉴스 기사의 핵심 내용을 분석하여 아래 형식에 맞춰 응답해주세요.
