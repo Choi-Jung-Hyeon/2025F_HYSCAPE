@@ -1,10 +1,11 @@
 # source_fetcher.py
 
 import feedparser
-from config import RSS_URL, KEYWORD
+# from config import RSS_URL, KEYWORD
+from config import RSS_URL
 
 def fetch_articles_from_rss():
-    print(f"'{KEYWORD}' 키워드로 Google News RSS 피드를 수집합니다.")
+    print(f"월간수소경제 피드를 수집합니다.")
     
     feed = feedparser.parse(RSS_URL)
     
