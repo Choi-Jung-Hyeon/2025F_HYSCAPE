@@ -4,7 +4,8 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from datetime import datetime
-from config import SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL, SMTP_SERVER, SMTP_PORT, KEYWORD
+# from config import SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL, SMTP_SERVER, SMTP_PORT, KEYWORD
+from config import SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL, SMTP_SERVER, SMTP_PORT
 
 def send_email(html_content):
     if not SENDER_PASSWORD:
@@ -17,7 +18,7 @@ def send_email(html_content):
     msg = MIMEMultipart()
     msg['From'] = SENDER_EMAIL
     msg['To'] = RECEIVER_EMAIL
-    msg['Subject'] = f"[{KEYWORD} 뉴스 브리핑] {today_str}"
+    msg['Subject'] = f"[월간수소경제 브리핑] {today_str}"
 
     msg.attach(MIMEText(html_content, 'html', 'utf-8'))
 
