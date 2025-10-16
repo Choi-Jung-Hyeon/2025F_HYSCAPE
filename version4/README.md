@@ -1,204 +1,382 @@
-# 수소 뉴스 자동 브리핑 시스템 v2.1 - 설치 및 사용 가이드
+# 🚀 수소 뉴스 자동 브리핑 시스템 v3.0
 
-## 📦 1. 필수 라이브러리 설치
-
-```bash
-pip install -r requirements.txt
-```
-
-설치되는 라이브러리:
-- `google-generativeai`: Gemini AI API
-- `feedparser`: RSS 피드 파싱
-- `newspaper3k`: 뉴스 기사 본문 추출
-- `requests`, `beautifulsoup4`, `lxml`: 웹 크롤링
-- `PyPDF2`: PDF 파일 읽기
+**Target 키워드 중심 + 구글 뉴스 추가 + PDF 키워드 요약**
 
 ---
 
-## 🔧 2. config.py 설정
+## 📋 목차
 
-`config.py` 파일을 열고 다음 정보를 입력하세요:
+1. [프로젝트 개요](#-프로젝트-개요)
+2. [v3.0 주요 변경사항](#-v30-주요-변경사항)
+3. [시스템 아키텍처](#-시스템-아키텍처)
+4. [설치 및 설정](#-설치-및-설정)
+5. [사용 방법](#-사용-방법)
+6. [트러블슈팅](#-트러블슈팅)
+7. [향후 계획](#-향후-계획)
 
-### 필수 설정
+---
+
+## 🎯 프로젝트 개요
+
+수소 산업 관련 뉴스를 자동으로 수집하고, AI(Gemini)로 요약하여 이메일로 발송하는 시스템입니다.
+
+### 핵심 기능
+- ✅ 다중 뉴스 소스 자동 수집 (웹 + RSS + 네이버 + 구글)
+- ✅ **Target 키워드 중심 필터링** (기술 + 회사)
+- ✅ **회사 키워드 강조** (관심 기업 ⭐)
+- ✅ **PDF 브리핑 키워드 중심 요약**
+- ✅ Gemini 2.0 Flash AI 요약
+- ✅ 이메일 자동 발송
+- ✅ 실패 소스 로깅
+
+---
+
+## 🆕 v3.0 주요 변경사항
+
+### 1. **Target 키워드 추가** ⭐
 ```python
-# Google Gemini API 키 (https://aistudio.google.com/app/apikey)
-GOOGLE_API_KEY = "여기에_발급받은_API_키_입력"
+# 기술 키워드
+PEM 수전해, AEM 수전해, PEM 연료전지, 연료전지,
+촉매 사용량, 로딩량, 전해질막, 내구성, durability,
+수전해 시스템, 태양광, 풍력, 지열, 수력, 재생에너지
 
-# Gmail 발송 정보
-SENDER_EMAIL = "본인의_Gmail@gmail.com"
-SENDER_PASSWORD = "Gmail_앱_비밀번호"  # 2단계 인증 필수
+# 회사 키워드 (2024년 투자받은 수소 스타트업)
+Electric Hydrogen, EnerVenue, Koloma, Ohmium, ZeroAvia,
+Energy Tree Solutions, HYSETCO, Hysata, LONGi, Verdagy,
++ 23개 더...
+```
 
-# 수신자 목록
-RECEIVER_EMAIL = [
-    "수신자1@example.com",
-    "수신자2@example.com"
+### 2. **구글 뉴스 추가** 🌍
+```python
+GOOGLE_KEYWORDS = [
+    "green hydrogen",
+    "hydrogen fuel cell",
+    "PEM electrolyzer",
+    "hydrogen economy",
+    "hydrogen startup",
+    "AEM electrolyzer"
 ]
 ```
 
-### 선택 설정
-```python
-# 기사 수집 제한
-MAX_ARTICLES_PER_SOURCE = 5  # 소스당 최대 5개
-MAX_TOTAL_ARTICLES = 15      # 전체 최대 15개
+### 3. **PDF 키워드 중심 요약**
+- 전체 PDF가 아닌 **Target 키워드 포함 문단만 추출**
+- 관련 없는 내용 제외하고 핵심만 요약
 
-# PDF 파일 경로
-PDF_FILE_PATH = "250925_일간수소 이슈 브리핑.pdf"
+### 4. **회사 키워드 강조**
+- 관심 기업이 언급되면 **빨간색 강조 ⭐**
+- 관련도 점수 자동 계산
+
+### 5. **실패 소스 로깅**
+- `logs/failed_sources.txt`에 실패한 소스 자동 기록
+
+---
+
+## 🏗️ 시스템 아키텍처
+
+```
+project/
+├── pdf/                          # PDF 파일 저장
+│   └── 250925_일간수소브리핑.pdf
+│
+├── logs/                         # 로그 파일
+│   └── failed_sources.txt
+│
+├── config.py                     # 설정 파일
+├── source_fetcher.py            # 뉴스 수집 (구글 뉴스 추가!)
+├── content_scraper.py           # 본문 추출
+├── summarizer.py                # AI 요약 (회사 키워드 강조!)
+├── notifier.py                  # 이메일 발송
+├── pdf_reader.py                # PDF 키워드 중심 요약
+├── main.py                      # 메인 실행
+│
+├── requirements.txt             # 의존성
+└── README.md                    # 이 파일
+```
+
+### 데이터 흐름
+
+```
+1. 뉴스 수집
+   ├── 월간수소경제 (웹 크롤링)
+   ├── Hydrogen Central (RSS)
+   ├── 네이버 뉴스 (4개 키워드)
+   └── 구글 뉴스 (6개 키워드) ⭐
+   
+2. PDF 처리
+   ├── pdf/ 디렉토리에서 파일 탐색
+   ├── Target 키워드 포함 문단 추출
+   └── Gemini로 요약
+   
+3. 기사 처리
+   ├── 본문 스크래핑
+   ├── Gemini AI 요약
+   ├── Target 키워드 매칭
+   └── 관련도 점수 계산
+   
+4. 이메일 발송
+   ├── 회사 키워드 포함 기사 강조 ⭐
+   ├── 관련도 높은 순 정렬
+   └── Gmail SMTP 발송
 ```
 
 ---
 
-## 📄 3. PDF 파일 준비 (선택사항)
+## 🛠️ 설치 및 설정
 
-월간수소경제 브리핑 PDF를 분석하고 싶다면:
+### 1. 필요 조건
+- Python 3.8+
+- Gmail 계정 (앱 비밀번호 필요)
+- Google Gemini API 키
 
-1. PDF 파일을 `version4` 디렉토리에 저장
-2. `config.py`의 `PDF_FILE_PATH`에 파일명 입력
-3. 시스템이 자동으로 PDF를 읽고 키워드를 추출합니다
+### 2. 설치
+
+```bash
+# 1. 저장소 클론
+git clone https://github.com/your-repo/hydrogen-news-v3.git
+cd hydrogen-news-v3
+
+# 2. 가상환경 생성 (권장)
+python -m venv venv
+source venv/bin/activate  # Windows: venv\Scripts\activate
+
+# 3. 의존성 설치
+pip install -r requirements.txt
+
+# 4. 디렉토리 생성
+mkdir pdf logs
+```
+
+### 3. 설정 파일 수정
+
+**`config.py` 수정:**
+
+```python
+# 1. Google Gemini API 키
+GOOGLE_API_KEY = "your-gemini-api-key-here"
+
+# 2. 이메일 설정
+SENDER_EMAIL = "your_email@gmail.com"
+SENDER_PASSWORD = "your_gmail_app_password"  # 16자리 앱 비밀번호
+RECEIVER_EMAIL = "receiver@example.com"
+```
+
+### 4. Gmail 앱 비밀번호 생성
+
+1. [Google 계정 보안 설정](https://myaccount.google.com/security)
+2. "2단계 인증" 활성화
+3. "앱 비밀번호" 생성
+4. 생성된 16자리 비밀번호를 `config.py`에 입력
+
+### 5. Google Gemini API 키 발급
+
+1. [Google AI Studio](https://aistudio.google.com/app/apikey) 접속
+2. "Create API Key" 클릭
+3. API 키 복사하여 `config.py`에 입력
 
 ---
 
-## 🚀 4. 실행 방법
+## 🚀 사용 방법
 
-### 방법 1: 전체 시스템 실행
+### 1. 기본 실행
+
 ```bash
 python main.py
 ```
 
-### 방법 2: 모듈별 단위 테스트
+### 2. PDF 브리핑 파일 추가
 
-#### 뉴스 소스 수집 테스트
 ```bash
-python source_fetcher.py
+# pdf/ 디렉토리에 PDF 파일 복사
+cp "250925_일간수소브리핑.pdf" pdf/
+
+# 실행
+python main.py
 ```
 
-#### PDF 리더 테스트
+### 3. 진단 모드 (선택사항)
+
 ```bash
-python pdf_reader.py
+# 개별 모듈 테스트
+python source_fetcher.py  # 뉴스 수집 테스트
+python pdf_reader.py      # PDF 처리 테스트
+python summarizer.py      # 요약 테스트
 ```
 
-#### 본문 추출 테스트
-```bash
-python content_scraper.py
-```
-
----
-
-## 📊 5. 실행 결과 예시
+### 4. 실행 결과
 
 ```
-==================================================================
-🚀 수소 뉴스 브리핑 시스템 v2.1 시작
+================================================================================
+🚀 수소 뉴스 브리핑 시스템 v3.0 시작
 ⏰ 실행 시간: 2025-10-16 09:00:00
-==================================================================
+================================================================================
 
-[단계 0] PDF 브리핑 파일을 처리합니다...
-[PDF 리더] PDF 파일을 읽습니다: 250925_일간수소 이슈 브리핑.pdf
-  📄 총 5페이지를 읽습니다...
-  ✅ 텍스트 추출 완료 (12450자)
-  ✅ 15개의 키워드를 추출했습니다.
+[단계 0] PDF 브리핑 파일 처리 (키워드 중심 요약)
+📁 1개 PDF 파일 발견:
+  - 250925_일간수소브리핑.pdf
+처리 중: 250925_일간수소브리핑.pdf
+  📄 전체 텍스트 길이: 15234 글자
+  📌 매칭된 키워드: 18개
+  📄 관련 문단: 12개
+🤖 Gemini로 요약 중... (총 12개 문단)
+✅ PDF 요약 완료
 
-[단계 1] 뉴스 소스에서 기사를 수집합니다...
-============================================================
-뉴스 소스 수집을 시작합니다
-============================================================
-[월간수소경제] RSS 피드를 수집합니다
-  ✅ 10개의 기사를 찾았습니다.
-[Hydrogen Insight] RSS 피드를 수집합니다
-  ✅ 8개의 기사를 찾았습니다.
-[네이버뉴스(수소)] 네이버 뉴스를 검색합니다
-  ✅ 10개의 기사를 찾았습니다.
+[단계 1] 뉴스 소스에서 기사 수집
+  - 월간수소경제
+  - Hydrogen Central
+  - 네이버 뉴스 (4개 키워드)
+  - 구글 뉴스 (6개 키워드) ⭐ NEW!
+--------------------------------------------------------------------------------
+  ✅ 월간수소경제: 5개 수집
+  ✅ Hydrogen Central: 5개 수집
+  ✅ 네이버(수소경제): 3개
+  ✅ 네이버(그린수소): 3개
+  ✅ 네이버(수소연료전지): 3개
+  ✅ 네이버(수소충전소): 3개
+  ✅ 구글(green hydrogen): 3개
+  ✅ 구글(hydrogen fuel cell): 3개
+  ✅ 구글(PEM electrolyzer): 3개
+  ✅ 구글(hydrogen economy): 3개
+  ✅ 구글(hydrogen startup): 3개
+  ✅ 구글(AEM electrolyzer): 3개
 
-총 28개의 기사를 수집했습니다
-============================================================
+📊 총 42개 기사 수집 완료 (중복 제거 후)
 
-[단계 2] 총 15개 기사를 처리합니다...
-[1/15] 처리 중: 삼성중공업 수소 연료전지 선박...
-  ├─ 본문 추출 중... ✅ 성공 (2450자)
-  ├─ AI 요약 중... ✅ 성공
-  └─ ✅ 완료 (1/15)
+📌 전체 기사 수 제한: 42개 → 15개
 
-[단계 3] 이메일을 발송합니다...
-  ✅ 이메일 발송 완료!
+[단계 2] 15개 기사 처리 (스크래핑 + 요약)
+...
+✅ 총 15개 기사 처리 완료
 
-==================================================================
-✨ 모든 작업을 완료했습니다!
-==================================================================
+[단계 3] 이메일 본문 생성
+[단계 4] 이메일 발송
+✅ 이메일 발송 완료!
+
+================================================================================
+🎉 수소 뉴스 브리핑 v3.0 완료!
+================================================================================
 ```
 
 ---
 
-## ⚠️ 6. 문제 해결 가이드
+## 🔍 트러블슈팅
 
-### 문제 1: 특정 뉴스 소스 접속 실패
+### 1. 크롤링 실패
 
-**증상**: `❌ 연결 오류` 또는 `❌ 타임아웃`
+**문제:** 특정 사이트 크롤링 실패 (403, 404 등)
 
-**원인**:
-- RSS 피드 URL이 변경되었거나 만료됨
-- 웹사이트에서 봇 접근 차단
-- 네트워크 문제
-
-**해결 방법**:
-1. 웹브라우저에서 해당 RSS URL 직접 접속 확인
-2. `config.py`에서 해당 소스 제거 또는 URL 업데이트
-3. VPN 사용 시도
-
-### 문제 2: PDF 파일 읽기 실패
-
-**증상**: `❌ 파일을 찾을 수 없습니다`
-
-**해결 방법**:
-1. PDF 파일이 `version4` 디렉토리에 있는지 확인
-2. `config.py`의 `PDF_FILE_PATH`가 정확한지 확인
-3. 파일 경로에 한글이 포함된 경우 영문으로 변경
-
-### 문제 3: Gmail 발송 실패
-
-**증상**: `Authentication failed`
-
-**해결 방법**:
-1. Gmail 2단계 인증 설정 확인
-2. '앱 비밀번호' 새로 생성 (16자리)
-3. `SENDER_PASSWORD`에 정확히 입력 (공백 없이)
-
----
-
-## 📌 7. 추가 기능
-
-### 네이버 뉴스 키워드 추가
-```python
-# config.py
-NAVER_NEWS_KEYWORDS = ["수소", "수전해", "연료전지", "그린수소", "청정수소"]
-```
-
-### 뉴스 소스 추가
-```python
-# config.py
-NEWS_SOURCES = {
-    "기존소스": "URL",
-    "새로운소스": "https://example.com/rss"
-}
-```
-
----
-
-## 🔄 8. 자동 실행 (Cron)
-
-매일 오전 8시에 자동 실행하려면:
-
+**해결:**
 ```bash
-# crontab 편집
-crontab -e
+# logs/failed_sources.txt 확인
+cat logs/failed_sources.txt
 
-# 아래 라인 추가
-0 8 * * * cd /path/to/version4 && /path/to/venv/bin/python main.py
+# config.py에서 해당 소스 주석 처리
+```
+
+### 2. PDF 읽기 실패
+
+**문제:** `PyPDF2 설치되지 않음`
+
+**해결:**
+```bash
+pip install PyPDF2
+```
+
+### 3. 이메일 발송 실패
+
+**문제:** `Authentication failed`
+
+**해결:**
+1. Gmail 앱 비밀번호 재생성
+2. `config.py`에 정확히 입력 (공백 없이 16자리)
+
+### 4. Gemini API 오류
+
+**문제:** `API key not valid`
+
+**해결:**
+1. [Google AI Studio](https://aistudio.google.com/app/apikey)에서 API 키 확인
+2. `config.py`에 정확히 입력
+
+---
+
+## 📊 실행 결과 예시
+
+### 이메일 예시
+
+```
+제목: [수소 브리핑 v3.0] 2025-10-16 - 15개 기사
+
+📰 2025-10-16 수소 뉴스 브리핑
+v3.0 - Target 키워드 중심 | 총 15개 기사
+
+📊 브리핑 요약
+• 총 기사: 15개
+• 회사 키워드 포함: 8개 ⭐
+• 기술 키워드 포함: 12개
+• PDF 브리핑: success
+
+📄 월간수소경제 PDF 브리핑 요약
+매칭 키워드: Electric Hydrogen, PEM 수전해, 연료전지, ...
+관련 문단: 12개
+
+📌 핵심 내용:
+• Electric Hydrogen가 새로운 PEM 수전해 시스템 발표...
+• ...
+
+📰 수집 기사 요약
+
+⭐ 관심 기업 Electric Hydrogen, 혁신적인 PEM 수전해...
+출처: 구글뉴스(PEM electrolyzer) | 원문 링크
+⭐ 관심 기업: Electric Hydrogen
+🔧 기술 키워드: PEM 수전해, 촉매 사용량, 내구성
+...
+
+현대건설, 국내 최초 상업용 수전해 기반 수소 생산기지 준공
+출처: 월간수소경제 | 원문 링크
+🔧 기술 키워드: 수전해 시스템, 그린수소, 재생에너지
+...
 ```
 
 ---
 
-## 📧 문의 및 지원
+## 🔮 향후 계획
 
-문제가 계속되면 다음 정보와 함께 문의하세요:
-- 오류 메시지 전체
-- `config.py` 설정 (비밀번호 제외)
-- Python 버전: `python --version`
+### v4.0 (예정)
+- [ ] 노션 API 연동 (연도별 이슈 정리)
+- [ ] 웹 대시보드 (Flask/Streamlit)
+- [ ] 추가 해외 소스 (Hydrogen Tech World, The Hydrogen Standard)
+- [ ] 중국어 뉴스 소스 추가
+
+### v5.0 (예정)
+- [ ] NAS 서버 연동 (PDF 자동 저장)
+- [ ] 슬랙/텔레그램 알림
+- [ ] 데이터베이스 (기사 히스토리)
+- [ ] 주간/월간 리포트
+
+---
+
+## 📝 라이센스
+
+MIT License
+
+---
+
+## 👥 기여
+
+- **개발자:** 최정현
+- **소속:** 하이스케이프 (HYSCAPE)
+- **기간:** 2024.09 - 2024.12
+- **문의:** your_email@example.com
+
+---
+
+## 🙏 감사
+
+- **Google Gemini API** - AI 요약
+- **월간수소경제** - 주요 뉴스 소스
+- **Hydrogen Central** - RSS 피드
+- **Version 5 PDF** - Target 키워드 및 회사 리스트
+
+---
+
+**v3.0 - 2025.10.16**

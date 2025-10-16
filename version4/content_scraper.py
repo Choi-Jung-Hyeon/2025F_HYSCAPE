@@ -1,52 +1,73 @@
-# content_scraper.py (v2 - newspaper3k)
+# content_scraper.py (v3.0)
+"""
+기사 본문 추출 모듈
+"""
 
-from newspaper import Article
+import requests
+from bs4 import BeautifulSoup
 import time
 
-def get_and_clean_article_content(url):
-    for attempt in range(2):
-        try:
-            article = Article(url, language='ko')
-            # print(article)
-            
-            article.download()
-            # print(article.download())
-
-            article.parse()
-            
-            if article.text:
-                # print(article.text)
-                return article.text
-            else:
-                # print(article.text)
-                print(f"  [정보] 기사 내용이 비어 있습니다.")
-                break
-
-        except Exception as e:
-            print(f"  [오류] 본문 추출 실패 (시도 {attempt + 1}/2): {url}")
-            print(f"  오류 내용: {e}")
-            time.sleep(2)
-            
-    return None
-
-# 단위 테스트 코드
-if __name__ == '__main__':
-    print("--- content_scraper.py (v2) 단위 테스트 시작 ---")
+def get_and_clean_article_content(url, source_name=""):
+    """
+    URL에서 기사 본문 추출 및 정제
+    """
+    headers = {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+    }
     
-    test_urls = [
-        "https://www.e-kea.com/news/articleView.html?idxno=36659"
-        "http://www.en-e.kr/news/articleView.html?idxno=21149",
-        "https://www.news1.kr/articles/?5246757"
-    ]
-    
-    for test_url in test_urls:
-        print(f"\n[테스트 URL]: {test_url}")
-        content = get_and_clean_article_content(test_url)
+    try:
+        response = requests.get(url, headers=headers, timeout=15)
+        response.raise_for_status()
         
+        soup = BeautifulSoup(response.content, 'html.parser')
+        
+        # 본문 추출 (다양한 선택자 시도)
+        content = None
+        
+        # 방법 1: article 태그
+        article = soup.find('article')
+        if article:
+            content = article.get_text(separator='\n', strip=True)
+        
+        # 방법 2: div.article-body, div.content 등
+        if not content:
+            for selector in ['div.article-body', 'div.content', 'div.entry-content', 
+                           'div.post-content', 'div.news-content']:
+                elem = soup.select_one(selector)
+                if elem:
+                    content = elem.get_text(separator='\n', strip=True)
+                    break
+        
+        # 방법 3: p 태그들 수집
+        if not content:
+            paragraphs = soup.find_all('p')
+            if len(paragraphs) > 3:
+                content = '\n'.join([p.get_text(strip=True) for p in paragraphs])
+        
+        # 정제
         if content:
-            print("[추출 성공 ✅]")
-            print(content[:200] + "...")
-        else:
-            print("[추출 실패 ❗️]")
+            # 불필요한 공백 제거
+            lines = [line.strip() for line in content.split('\n') if line.strip()]
+            content = '\n'.join(lines)
+            
+            # 최소 길이 확인
+            if len(content) < 100:
+                return None
+            
+            return content[:5000]  # 최대 5000자
         
-    print("\n--- 단위 테스트 종료 ---")
+        return None
+        
+    except Exception as e:
+        print(f"    ⚠️  본문 추출 실패: {e}")
+        return None
+
+if __name__ == "__main__":
+    # 테스트
+    test_url = "https://www.h2news.kr/news/article.html?no=11945"
+    content = get_and_clean_article_content(test_url)
+    if content:
+        print(f"추출 성공: {len(content)}자")
+        print(content[:200] + "...")
+    else:
+        print("추출 실패")
