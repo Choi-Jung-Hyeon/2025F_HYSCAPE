@@ -1,0 +1,19 @@
+# AI 기반 수소 뉴스 자동 요약 시스템 v2.0
+# 필요 라이브러리 목록
+
+# Google Gemini AI
+google-generativeai>=0.3.0
+
+# RSS 피드 파싱
+feedparser>=6.0.0
+
+# 뉴스 기사 본문 추출
+newspaper3k>=0.2.8
+
+# 웹 크롤링 (v2.0 추가)
+beautifulsoup4>=4.12.0
+requests>=2.31.0
+lxml>=4.9.0
+
+# HTML 파싱
+html5lib>=1.1
