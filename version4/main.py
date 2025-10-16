@@ -7,6 +7,7 @@ from source_fetcher import fetch_articles_from_rss
 from content_scraper import get_and_clean_article_content
 from summarizer import get_summary_and_keywords
 from notifier import send_email
+from h2korea_fetcher import fetch_h2korea_publications
 
 def run_workflow():
     print("="*50)
