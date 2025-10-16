@@ -66,6 +66,10 @@ def diagnose_rss_source(source_name: str, rss_url: str) -> dict:
         else:
             print("✅")
         
+        # RSS 피드 메타정보 출력
+        print(f"      - 피드 제목: {feed.feed.get('title', 'N/A')}")
+        print(f"      - 피드 버전: {feed.version if hasattr(feed, 'version') else 'Unknown'}")
+        
         # 3단계: 기사 수집 테스트
         print("  [3/3] 기사 수집 테스트...", end=" ")
         articles_count = len(feed.entries)
@@ -75,6 +79,21 @@ def diagnose_rss_source(source_name: str, rss_url: str) -> dict:
             print("❌ 기사 없음")
             result['status'] = 'FAILED'
             result['error_message'] = "No articles found"
+            
+            # 🔍 상세 진단: RSS XML 내용 일부 출력
+            print("\n  🔍 상세 진단 (RSS XML 내용 일부):")
+            xml_preview = response.text[:1000] if hasattr(response, 'text') else str(response.content[:1000])
+            print(f"      {xml_preview}...")
+            
+            # RSS 피드 구조 정보
+            print(f"\n  📊 RSS 구조 정보:")
+            print(f"      - feed keys: {list(feed.feed.keys())[:10]}")
+            print(f"      - entries 타입: {type(feed.entries)}")
+            print(f"      - entries 길이: {len(feed.entries)}")
+            
+            # 웹브라우저 확인 제안
+            print(f"\n  💡 웹브라우저에서 확인: {rss_url}")
+            
         else:
             print(f"✅ ({articles_count}개)")
             result['status'] = 'SUCCESS'
