@@ -11,7 +11,7 @@ from config import (
     GEMINI_MODEL,
     SUMMARY_PROMPT_TEMPLATE,
     TARGET_KEYWORDS_TECH,
-    TARGET_KEYWORDS_COMPANY
+    TARGET_COMPANIES
 )
 
 # Gemini API 설정
@@ -31,7 +31,7 @@ def get_summary_and_keywords(content, article_title):
     prompt = SUMMARY_PROMPT_TEMPLATE.format(
         title=article_title,
         content=content[:4000],  # 토큰 제한 고려
-        company_keywords=", ".join(TARGET_KEYWORDS_COMPANY[:15]),  # 주요 회사만
+        company_keywords=", ".join(TARGET_COMPANIES[:15]),  # 주요 회사만
         tech_keywords=", ".join(TARGET_KEYWORDS_TECH[:10])  # 주요 기술만
     )
     
@@ -47,7 +47,7 @@ def get_summary_and_keywords(content, article_title):
         return {
             'summary': summary,
             'matched_keywords': matched_keywords,
-            'has_company': any(k in matched_keywords for k in TARGET_KEYWORDS_COMPANY),
+            'has_company': any(k in matched_keywords for k in TARGET_COMPANIES),
             'has_tech': any(k in matched_keywords for k in TARGET_KEYWORDS_TECH)
         }
         
@@ -76,7 +76,7 @@ def extract_matched_keywords(content, title):
             matched.append(keyword)
     
     # 회사 키워드 매칭 ⭐
-    for keyword in TARGET_KEYWORDS_COMPANY:
+    for keyword in TARGET_COMPANIES:
         if keyword.lower() in full_text:
             matched.append(keyword)
     
@@ -94,7 +94,7 @@ def calculate_relevance_score(matched_keywords):
     score = 0
     
     for keyword in matched_keywords:
-        if keyword in TARGET_KEYWORDS_COMPANY:
+        if keyword in TARGET_COMPANIES:
             score += 2  # 회사 키워드는 더 높은 점수
         elif keyword in TARGET_KEYWORDS_TECH:
             score += 1
@@ -170,7 +170,7 @@ def _generate_keywords_html(matched_keywords, has_company):
         return ""
     
     # 회사 키워드와 기술 키워드 분리
-    company_kw = [k for k in matched_keywords if k in TARGET_KEYWORDS_COMPANY]
+    company_kw = [k for k in matched_keywords if k in TARGET_COMPANIES]
     tech_kw = [k for k in matched_keywords if k in TARGET_KEYWORDS_TECH]
     
     html = '<div style="margin: 10px 0;">'
