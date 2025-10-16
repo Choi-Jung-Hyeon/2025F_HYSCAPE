@@ -1,6 +1,8 @@
 # content_scraper.py (v3.0)
 """
 기사 본문 추출 모듈
+- 다양한 사이트 지원
+- 월간수소경제 전용 파서 추가
 """
 
 import requests
@@ -21,28 +23,14 @@ def get_and_clean_article_content(url, source_name=""):
         
         soup = BeautifulSoup(response.content, 'html.parser')
         
-        # 본문 추출 (다양한 선택자 시도)
-        content = None
+        # 월간수소경제 전용 파서
+        if "h2news.kr" in url:
+            content = _parse_h2news_article(soup)
+            if content:
+                return content[:5000]
         
-        # 방법 1: article 태그
-        article = soup.find('article')
-        if article:
-            content = article.get_text(separator='\n', strip=True)
-        
-        # 방법 2: div.article-body, div.content 등
-        if not content:
-            for selector in ['div.article-body', 'div.content', 'div.entry-content', 
-                           'div.post-content', 'div.news-content']:
-                elem = soup.select_one(selector)
-                if elem:
-                    content = elem.get_text(separator='\n', strip=True)
-                    break
-        
-        # 방법 3: p 태그들 수집
-        if not content:
-            paragraphs = soup.find_all('p')
-            if len(paragraphs) > 3:
-                content = '\n'.join([p.get_text(strip=True) for p in paragraphs])
+        # 일반 본문 추출
+        content = _parse_generic_article(soup)
         
         # 정제
         if content:
@@ -61,6 +49,72 @@ def get_and_clean_article_content(url, source_name=""):
     except Exception as e:
         print(f"    ⚠️  본문 추출 실패: {e}")
         return None
+
+def _parse_h2news_article(soup):
+    """월간수소경제 기사 전용 파서"""
+    try:
+        # 방법 1: article-view-content-div
+        content_div = soup.find('div', {'id': 'article-view-content-div'})
+        if content_div:
+            # 광고, 스크립트 제거
+            for unwanted in content_div.find_all(['script', 'style', 'iframe', 'aside']):
+                unwanted.decompose()
+            
+            text = content_div.get_text(separator='\n', strip=True)
+            if len(text) > 100:
+                return text
+        
+        # 방법 2: div.user-content
+        content_div = soup.find('div', class_='user-content')
+        if content_div:
+            for unwanted in content_div.find_all(['script', 'style', 'iframe']):
+                unwanted.decompose()
+            
+            text = content_div.get_text(separator='\n', strip=True)
+            if len(text) > 100:
+                return text
+        
+        # 방법 3: article 태그
+        article = soup.find('article')
+        if article:
+            for unwanted in article.find_all(['script', 'style', 'iframe']):
+                unwanted.decompose()
+            
+            text = article.get_text(separator='\n', strip=True)
+            if len(text) > 100:
+                return text
+        
+        return None
+        
+    except Exception as e:
+        print(f"    ⚠️  월간수소경제 파싱 실패: {e}")
+        return None
+
+def _parse_generic_article(soup):
+    """일반 사이트 기사 파서"""
+    content = None
+    
+    # 방법 1: article 태그
+    article = soup.find('article')
+    if article:
+        content = article.get_text(separator='\n', strip=True)
+    
+    # 방법 2: div.article-body, div.content 등
+    if not content:
+        for selector in ['div.article-body', 'div.content', 'div.entry-content', 
+                       'div.post-content', 'div.news-content', 'div.article-content']:
+            elem = soup.select_one(selector)
+            if elem:
+                content = elem.get_text(separator='\n', strip=True)
+                break
+    
+    # 방법 3: p 태그들 수집
+    if not content:
+        paragraphs = soup.find_all('p')
+        if len(paragraphs) > 3:
+            content = '\n'.join([p.get_text(strip=True) for p in paragraphs])
+    
+    return content
 
 if __name__ == "__main__":
     # 테스트

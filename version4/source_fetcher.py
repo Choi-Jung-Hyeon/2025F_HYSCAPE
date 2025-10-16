@@ -195,13 +195,20 @@ class NaverNewsFetcher:
                 params = {
                     'where': 'news',
                     'query': keyword,
-                    'sort': '1'  # 최신순
+                    'sort': '1',  # 최신순
+                    'start': 1
+                }
+                
+                headers = {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+                    'Accept-Language': 'ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7'
                 }
                 
                 response = requests.get(
                     self.base_url,
                     params=params,
-                    headers={'User-Agent': 'Mozilla/5.0'},
+                    headers=headers,
                     timeout=10
                 )
                 response.raise_for_status()
@@ -209,21 +216,42 @@ class NaverNewsFetcher:
                 soup = BeautifulSoup(response.content, 'html.parser')
                 articles = []
                 
-                for item in soup.select('div.news_area')[:max_per_keyword]:
+                # 네이버 뉴스 HTML 구조 (2025년 버전)
+                # 방법 1: news_area 클래스
+                news_items = soup.select('div.news_area')
+                
+                if not news_items:
+                    # 방법 2: 다른 선택자 시도
+                    news_items = soup.select('li.bx')
+                
+                for item in news_items[:max_per_keyword]:
                     try:
+                        # 제목과 URL 추출
                         title_tag = item.select_one('a.news_tit')
+                        if not title_tag:
+                            title_tag = item.select_one('a[class*="news"]')
+                        
                         if title_tag:
-                            articles.append({
-                                'title': title_tag.text.strip(),
-                                'url': title_tag['href'],
-                                'source': f"{self.source_name}({keyword})"
-                            })
+                            title = title_tag.get_text(strip=True)
+                            url = title_tag.get('href', '')
+                            
+                            if title and url:
+                                articles.append({
+                                    'title': title,
+                                    'url': url,
+                                    'source': f"{self.source_name}({keyword})"
+                                })
                     except:
                         continue
                 
                 all_articles.extend(articles)
-                print(f"  ✅ 네이버({keyword}): {len(articles)}개")
-                time.sleep(0.5)  # 요청 간격
+                
+                if articles:
+                    print(f"  ✅ 네이버({keyword}): {len(articles)}개")
+                else:
+                    print(f"  ⚠️  네이버({keyword}): 0개 (HTML 구조 변경 가능성)")
+                
+                time.sleep(1)  # 요청 간격 (네이버 차단 방지)
                 
             except Exception as e:
                 log_failed_source(f"네이버({keyword})", str(e))
@@ -266,9 +294,12 @@ class GoogleNewsFetcher:
                 articles = []
                 
                 for entry in feed.entries[:max_per_keyword]:
+                    # 구글 뉴스 URL에서 실제 기사 URL 추출
+                    actual_url = self._extract_actual_url(entry.get('link', ''))
+                    
                     articles.append({
                         'title': entry.get('title', 'No title'),
-                        'url': entry.get('link', ''),
+                        'url': actual_url,
                         'source': f"{self.source_name}({keyword})"
                     })
                 
@@ -280,6 +311,19 @@ class GoogleNewsFetcher:
                 log_failed_source(f"구글({keyword})", str(e))
         
         return all_articles
+    
+    def _extract_actual_url(self, google_url):
+        """
+        구글 뉴스 redirect URL에서 실제 기사 URL 추출
+        예: https://news.google.com/rss/articles/... → 실제 URL
+        """
+        try:
+            # redirect 따라가기
+            response = requests.head(google_url, allow_redirects=True, timeout=5)
+            return response.url
+        except:
+            # 실패 시 원본 URL 반환
+            return google_url
 
 # ========================================
 # 5. Fetcher Manager

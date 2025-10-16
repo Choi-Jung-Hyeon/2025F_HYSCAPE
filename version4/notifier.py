@@ -7,17 +7,26 @@ import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from datetime import datetime
-from config import SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL
+from config import SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL, SMTP_SERVER, SMTP_PORT
 
 def send_email(subject, html_body):
     """
     Gmail SMTP로 이메일 발송
+    - 다중 수신자 지원
     """
     try:
+        # 수신자 처리 (리스트 또는 문자열)
+        if isinstance(RECEIVER_EMAIL, list):
+            receivers = RECEIVER_EMAIL
+            to_header = ", ".join(RECEIVER_EMAIL)
+        else:
+            receivers = [RECEIVER_EMAIL]
+            to_header = RECEIVER_EMAIL
+        
         # 이메일 메시지 생성
         msg = MIMEMultipart('alternative')
         msg['From'] = SENDER_EMAIL
-        msg['To'] = RECEIVER_EMAIL
+        msg['To'] = to_header
         msg['Subject'] = subject
         
         # HTML 본문 추가
