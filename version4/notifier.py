@@ -1,52 +1,43 @@
-# notifier.py
+# notifier.py (v3.0)
+"""
+이메일 발송 모듈
+"""
 
 import smtplib
-from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from datetime import datetime
-# from config import SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL, SMTP_SERVER, SMTP_PORT, KEYWORD
-from config import SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL, SMTP_SERVER, SMTP_PORT
+from config import SENDER_EMAIL, SENDER_PASSWORD, RECEIVER_EMAIL
 
-def send_email(html_content):
-    if not SENDER_PASSWORD:
-        print("[오류] Gmail 앱 비밀번호가 config.py에 설정되지 않았습니다.")
-        print("이메일 발송 실패")
-        return False
-
-    today_str = datetime.now().strftime('%Y-%m-%d')
-    
-    msg = MIMEMultipart()
-    msg['From'] = SENDER_EMAIL
-    msg['To'] = ", ".join(RECEIVER_EMAIL)
-    msg['Subject'] = f"[월간수소경제 브리핑] {today_str}"
-
-    msg.attach(MIMEText(html_content, 'html', 'utf-8'))
-
-    try:
-        print(f"SMTP 서버({SMTP_SERVER}:{SMTP_PORT})에 연결하여 이메일 발송을 시도합니다.")
-        server = smtplib.SMTP(SMTP_SERVER, SMTP_PORT)
-        server.starttls()
-        server.login(SENDER_EMAIL, SENDER_PASSWORD)
-        server.sendmail(SENDER_EMAIL, RECEIVER_EMAIL, msg.as_string())
-        server.quit()
-        print(f"✅ 성공: '{', '.join(RECEIVER_EMAIL)}' 주소로 뉴스 브리핑을 발송했습니다.")
-        return True
-    except Exception as e:
-        print(f"❗️[오류] 이메일 발송에 실패했습니다: {e}")
-        return False
-
-# --- 단위 테스트 코드 ---
-if __name__ == '__main__':
-    print("--- notifier.py 단위 테스트 시작 ---")
-
-    test_html = """
-    <h1>📧 테스트 이메일</h1>
-    <p>이 메일은 notifier.py가 정상적으로 작동하는지 확인하기 위한 테스트 메일입니다.</p>
-    <hr>
-    <p><b>[AI 요약]</b><br>테스트 요약 내용입니다.</p>
-    <p><b>[키워드]</b><br>테스트, 이메일, 성공</p>
+def send_email(subject, html_body):
     """
-    
-    send_email(test_html)
+    Gmail SMTP로 이메일 발송
+    """
+    try:
+        # 이메일 메시지 생성
+        msg = MIMEMultipart('alternative')
+        msg['From'] = SENDER_EMAIL
+        msg['To'] = RECEIVER_EMAIL
+        msg['Subject'] = subject
         
-    print("--- 단위 테스트 종료 ---")
+        # HTML 본문 추가
+        html_part = MIMEText(html_body, 'html', 'utf-8')
+        msg.attach(html_part)
+        
+        # Gmail SMTP 서버 연결
+        with smtplib.SMTP_SSL('smtp.gmail.com', 465) as server:
+            server.login(SENDER_EMAIL, SENDER_PASSWORD)
+            server.send_message(msg)
+        
+        print("\n✅ 이메일 발송 완료!")
+        return True
+        
+    except Exception as e:
+        print(f"\n⚠️  이메일 발송 실패: {e}")
+        return False
+
+if __name__ == "__main__":
+    # 테스트
+    test_subject = "테스트 이메일"
+    test_body = "<h1>테스트</h1><p>이메일 발송 테스트입니다.</p>"
+    send_email(test_subject, test_body)

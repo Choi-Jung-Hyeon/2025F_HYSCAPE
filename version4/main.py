@@ -1,195 +1,210 @@
-# main.py (v2.1 - PDF 통합)
+# main.py (v3.0)
 """
-수소 뉴스 자동 요약 및 이메일 발송 시스템 메인 스크립트
-- 다중 뉴스 소스 수집
-- 네이버 뉴스 검색
-- PDF 브리핑 파일 처리
+수소 뉴스 자동 요약 및 이메일 발송 시스템 v3.0
+- Target 키워드 (기술 + 회사) 중심
+- 구글 뉴스 추가
+- PDF 키워드 중심 요약
+- 실패 소스 로깅
 """
 
 import time
 from datetime import datetime
 
-# v2.1 모듈 임포트
+# v3.0 모듈
 from source_fetcher import create_fetchers_from_config
 from content_scraper import get_and_clean_article_content
-from summarizer import get_summary_and_keywords
+from summarizer import get_summary_and_keywords, generate_article_html, calculate_relevance_score
 from notifier import send_email
-from pdf_reader import process_pdf_briefing
-from config import MAX_ARTICLES_PER_SOURCE, MAX_TOTAL_ARTICLES
-
+from pdf_reader import process_pdf_briefing, generate_pdf_html
+from config import MAX_TOTAL_ARTICLES
 
 def run_workflow():
-    """전체 워크플로우를 실행하는 메인 함수"""
+    """전체 워크플로우 실행"""
     
-    print("=" * 70)
-    print(f"🚀 수소 뉴스 브리핑 시스템 v2.1 시작")
+    print("=" * 80)
+    print("🚀 수소 뉴스 브리핑 시스템 v3.0 시작")
     print(f"⏰ 실행 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print("=" * 70)
-
+    print("=" * 80)
+    
     # ========================================
-    # 0. PDF 브리핑 파일 처리 (선택사항)
+    # 0. PDF 브리핑 처리 (Target 키워드 중심)
     # ========================================
-    print("\n[단계 0] PDF 브리핑 파일을 처리합니다...")
+    print("\n[단계 0] PDF 브리핑 파일 처리 (키워드 중심 요약)")
     pdf_result = process_pdf_briefing()
     
-    pdf_keywords = pdf_result.get('keywords', [])
-    if pdf_keywords:
-        print(f"  ✅ PDF에서 {len(pdf_keywords)}개 키워드 추출 완료")
-
+    pdf_html = generate_pdf_html(pdf_result)
+    
     # ========================================
-    # 1. 다중 뉴스 소스에서 기사 수집
+    # 1. 뉴스 소스에서 기사 수집
     # ========================================
-    print("\n[단계 1] 뉴스 소스에서 기사를 수집합니다...")
+    print("\n[단계 1] 뉴스 소스에서 기사 수집")
+    print("  - 월간수소경제")
+    print("  - Hydrogen Central")
+    print("  - 네이버 뉴스 (4개 키워드)")
+    print("  - 구글 뉴스 (6개 키워드) ⭐ NEW!")
+    print("-" * 80)
     
     manager = create_fetchers_from_config()
-    articles = manager.fetch_all_articles(limit_per_source=MAX_ARTICLES_PER_SOURCE)
-
+    articles = manager.fetch_all_articles()
+    
     if not articles:
-        print("\n⚠️  처리할 새로운 기사가 없습니다. 시스템을 종료합니다.")
+        print("\n⚠️  처리할 기사가 없습니다. 시스템을 종료합니다.")
         return
-
-    # 전체 기사 수 제한 적용
+    
+    # 기사 수 제한
     if len(articles) > MAX_TOTAL_ARTICLES:
         print(f"\n📌 전체 기사 수 제한: {len(articles)}개 → {MAX_TOTAL_ARTICLES}개")
         articles = articles[:MAX_TOTAL_ARTICLES]
-
-    # ========================================
-    # 2. 이메일 본문 생성 시작
-    # ========================================
-    today_str = datetime.now().strftime('%Y-%m-%d')
-    email_body_html = f"""
-    <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto;">
-        <h1 style="color: #0066cc;">📰 {today_str} 수소 뉴스 브리핑 (v2.1)</h1>
-        <p style="color: #666;">총 <strong>{len(articles)}</strong>개의 기사를 수집했습니다.</p>
-    """
     
-    # PDF 키워드 섹션 추가
-    if pdf_keywords:
-        email_body_html += f"""
-        <div style="background-color: #f0f8ff; padding: 15px; border-left: 4px solid #0066cc; margin: 20px 0;">
-            <h3 style="color: #0066cc; margin-top: 0;">📄 PDF 브리핑 주요 키워드</h3>
-            <p style="line-height: 1.8;">{', '.join(pdf_keywords)}</p>
-        </div>
-        """
+    # ========================================
+    # 2. 각 기사 처리 (스크래핑 + 요약)
+    # ========================================
+    print(f"\n[단계 2] {len(articles)}개 기사 처리 (스크래핑 + 요약)")
+    print("-" * 80)
     
+    processed_articles = []
     success_count = 0
-    failed_articles = []
-
-    # ========================================
-    # 3. 각 기사 처리 루프
-    # ========================================
-    print(f"\n[단계 2] 총 {len(articles)}개 기사를 처리합니다...")
     
     for i, article in enumerate(articles, 1):
-        print(f"\n{'─' * 70}")
-        print(f"[{i}/{len(articles)}] 처리 중: {article['title'][:50]}...")
-        print(f"출처: {article['source']}")
+        print(f"\n[{i}/{len(articles)}] {article['title'][:60]}...")
+        print(f"  출처: {article['source']}")
         
         try:
-            # 3-1. 본문 추출
-            print("  ├─ 본문 추출 중...", end=" ")
-            content = get_and_clean_article_content(article['url'])
+            # 2-1. 본문 스크래핑
+            print("  ⏳ 본문 추출 중...")
+            content = get_and_clean_article_content(article['url'], article['source'])
             
-            if not content or len(content) < 100:
-                print("❌ 실패 (본문이 너무 짧음)")
-                failed_articles.append((article, "본문 추출 실패"))
+            if not content:
+                print("  ⚠️  본문 추출 실패")
                 continue
             
-            print(f"✅ 성공 ({len(content)}자)")
-
-            # 3-2. AI 요약
-            print("  ├─ AI 요약 중...", end=" ")
-            summary, keywords = get_summary_and_keywords(article['title'], content)
+            print(f"  ✅ 본문 추출 완료 ({len(content)}자)")
             
-            if not summary:
-                print("❌ 실패")
-                failed_articles.append((article, "AI 요약 실패"))
+            # 2-2. Gemini 요약
+            print("  ⏳ AI 요약 중...")
+            summary_result = get_summary_and_keywords(content, article['title'])
+            
+            if not summary_result['summary'] or summary_result['summary'] == "요약 실패":
+                print("  ⚠️  요약 실패")
                 continue
             
-            print("✅ 성공")
+            # 관련도 점수 계산
+            relevance_score = calculate_relevance_score(summary_result['matched_keywords'])
             
-            # 3-3. 이메일 본문에 추가
-            email_body_html += f"""
-            <div style="border: 1px solid #ddd; padding: 20px; margin: 20px 0; border-radius: 8px;">
-                <h3 style="color: #333; margin-top: 0;">
-                    <span style="color: #0066cc;">[{success_count + 1}]</span> {article['title']}
-                </h3>
-                <p style="color: #888; font-size: 0.9em;">
-                    📰 출처: {article['source']} | 
-                    <a href="{article['url']}" style="color: #0066cc;">원문 보기</a>
-                </p>
-                <div style="background-color: #f9f9f9; padding: 15px; border-left: 3px solid #0066cc;">
-                    <p style="line-height: 1.6; color: #555;">{summary}</p>
-                </div>
-                <p style="margin-top: 10px;">
-                    <strong>🔑 키워드:</strong> 
-                    <span style="color: #0066cc;">{', '.join(keywords)}</span>
-                </p>
-            </div>
-            """
+            print(f"  ✅ 요약 완료")
+            print(f"     - 매칭 키워드: {len(summary_result['matched_keywords'])}개")
+            print(f"     - 회사 키워드: {'있음 ⭐' if summary_result['has_company'] else '없음'}")
+            print(f"     - 관련도 점수: {relevance_score}점")
+            
+            # 처리 완료 기사 저장
+            processed_articles.append({
+                'article': article,
+                'summary_result': summary_result,
+                'relevance_score': relevance_score
+            })
             
             success_count += 1
-            print(f"  └─ ✅ 완료 ({success_count}/{len(articles)})")
-            
-            # API 호출 제한 방지를 위한 짧은 대기
-            time.sleep(2)
+            time.sleep(1)  # API 요청 간격
             
         except Exception as e:
-            print(f"  └─ ❌ 처리 중 오류 발생: {e}")
-            failed_articles.append((article, str(e)))
-
-    # ========================================
-    # 4. 이메일 본문 마무리
-    # ========================================
-    email_body_html += f"""
-        <div style="margin-top: 40px; padding: 20px; background-color: #f5f5f5; border-radius: 5px;">
-            <h3 style="color: #333;">📊 처리 결과</h3>
-            <ul style="color: #555;">
-                <li>✅ 성공: <strong>{success_count}</strong>개</li>
-                <li>❌ 실패: <strong>{len(failed_articles)}</strong>개</li>
-            </ul>
-    """
+            print(f"  ⚠️  처리 중 오류: {e}")
+            continue
     
-    if failed_articles:
-        email_body_html += """
-            <h4 style="color: #d9534f;">실패한 기사 목록:</h4>
-            <ul style="color: #777; font-size: 0.9em;">
-        """
-        for article, reason in failed_articles:
-            email_body_html += f"<li>{article['title'][:60]}... ({reason})</li>"
-        email_body_html += "</ul>"
+    # ========================================
+    # 3. 관련도 순으로 정렬
+    # ========================================
+    processed_articles.sort(key=lambda x: x['relevance_score'], reverse=True)
     
-    email_body_html += """
+    print(f"\n{'=' * 80}")
+    print(f"✅ 총 {success_count}개 기사 처리 완료")
+    print(f"{'=' * 80}")
+    
+    if not processed_articles:
+        print("\n⚠️  처리된 기사가 없습니다.")
+        return
+    
+    # ========================================
+    # 4. 이메일 본문 생성
+    # ========================================
+    print("\n[단계 3] 이메일 본문 생성")
+    
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    
+    # HTML 헤더
+    email_html = f"""
+    <html>
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body style="font-family: 'Noto Sans KR', Arial, sans-serif; 
+                 max-width: 900px; margin: 0 auto; padding: 20px;">
+        
+        <!-- 제목 -->
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
+            <h1 style="margin: 0;">📰 {today_str} 수소 뉴스 브리핑</h1>
+            <p style="margin: 10px 0 0 0; opacity: 0.9;">
+                v3.0 - Target 키워드 중심 | 총 {len(processed_articles)}개 기사
+            </p>
         </div>
-        <p style="text-align: center; color: #999; margin-top: 30px;">
-            <small>본 메일은 AI 기반 자동 요약 시스템에 의해 생성되었습니다.</small>
-        </p>
-    </div>
+        
+        <!-- 요약 통계 -->
+        <div style="background-color: #f8f9fa; padding: 20px; border-radius: 10px; margin-bottom: 30px;">
+            <h3 style="margin-top: 0;">📊 브리핑 요약</h3>
+            <ul style="line-height: 2;">
+                <li>총 기사: <strong>{len(processed_articles)}개</strong></li>
+                <li>회사 키워드 포함: <strong>{sum(1 for x in processed_articles if x['summary_result']['has_company'])}개</strong> ⭐</li>
+                <li>기술 키워드 포함: <strong>{sum(1 for x in processed_articles if x['summary_result']['has_tech'])}개</strong></li>
+                <li>PDF 브리핑: <strong>{pdf_result.get('status', 'no_files')}</strong></li>
+            </ul>
+        </div>
     """
-
+    
+    # PDF 요약 추가
+    if pdf_html:
+        email_html += pdf_html
+    
+    # 기사 추가
+    email_html += """
+        <h2 style="color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px;">
+            📰 수집 기사 요약
+        </h2>
+    """
+    
+    for i, item in enumerate(processed_articles, 1):
+        email_html += generate_article_html(item['article'], item['summary_result'])
+    
+    # HTML 푸터
+    email_html += f"""
+        <div style="margin-top: 40px; padding: 20px; background-color: #ecf0f1; 
+                    border-radius: 10px; text-align: center;">
+            <p style="color: #7f8c8d; margin: 0;">
+                수소 뉴스 자동 브리핑 시스템 v3.0<br>
+                생성 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+            </p>
+        </div>
+    </body>
+    </html>
+    """
+    
     # ========================================
     # 5. 이메일 발송
     # ========================================
-    print(f"\n[단계 3] 이메일을 발송합니다...")
+    print("\n[단계 4] 이메일 발송")
     
-    if success_count > 0:
-        subject = f"[수소 뉴스] {today_str} 일일 브리핑 ({success_count}개)"
-        send_email(subject, email_body_html)
-        print("  ✅ 이메일 발송 완료!")
+    subject = f"[수소 브리핑 v3.0] {today_str} - {len(processed_articles)}개 기사"
+    
+    success = send_email(subject, email_html)
+    
+    if success:
+        print(f"\n{'=' * 80}")
+        print("🎉 수소 뉴스 브리핑 v3.0 완료!")
+        print(f"{'=' * 80}")
     else:
-        print("  ⚠️  요약된 기사가 없어 이메일을 발송하지 않습니다.")
+        print("\n⚠️  이메일 발송 실패")
 
-    print("\n" + "=" * 70)
-    print("✨ 모든 작업을 완료했습니다!")
-    print("=" * 70 + "\n")
-
-
+# ========================================
+# 실행
+# ========================================
 if __name__ == "__main__":
-    try:
-        run_workflow()
-    except KeyboardInterrupt:
-        print("\n\n⚠️  사용자에 의해 중단되었습니다.")
-    except Exception as e:
-        print(f"\n\n❌ 치명적 오류 발생: {e}")
-        import traceback
-        traceback.print_exc()
+    run_workflow()
