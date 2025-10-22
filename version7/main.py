@@ -1,6 +1,7 @@
-# main.py (v3.0)
+# main.py (v7.0)
 """
-수소 뉴스 자동 요약 및 이메일 발송 시스템 v3.0
+수소 뉴스 자동 요약 및 이메일 발송 시스템 v7.0
+- 모듈화된 source_fetcher 아키텍처
 - Target 키워드 (기술 + 회사) 중심
 - 구글 뉴스 추가
 - PDF 키워드 중심 요약
@@ -10,8 +11,8 @@
 import time
 from datetime import datetime
 
-# v3.0 모듈
-from source_fetcher import create_fetchers_from_config
+# v7.0 모듈 (수정됨!)
+from source_fetcher.factory import SourceFetcherFactory  # ⭐ 변경!
 from content_scraper import get_and_clean_article_content
 from summarizer import get_summary_and_keywords, generate_article_html, calculate_relevance_score
 from notifier import send_email
@@ -22,7 +23,7 @@ def run_workflow():
     """전체 워크플로우 실행"""
     
     print("=" * 80)
-    print("🚀 수소 뉴스 브리핑 시스템 v3.0 시작")
+    print("🚀 수소 뉴스 브리핑 시스템 v7.0 시작")
     print(f"⏰ 실행 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     print("=" * 80)
     
@@ -41,10 +42,11 @@ def run_workflow():
     print("  - 월간수소경제")
     print("  - Hydrogen Central")
     print("  - 네이버 뉴스 (4개 키워드)")
-    print("  - 구글 뉴스 (6개 키워드) ⭐ NEW!")
+    print("  - 구글 뉴스 (5개 키워드) ⭐")
     print("-" * 80)
     
-    manager = create_fetchers_from_config()
+    # ⭐ 변경: Factory 패턴 사용
+    manager = SourceFetcherFactory.create_manager_from_config()
     articles = manager.fetch_all_articles()
     
     if not articles:
@@ -144,7 +146,7 @@ def run_workflow():
                     color: white; padding: 30px; border-radius: 10px; margin-bottom: 30px;">
             <h1 style="margin: 0;">📰 {today_str} 수소 뉴스 브리핑</h1>
             <p style="margin: 10px 0 0 0; opacity: 0.9;">
-                v3.0 - Target 키워드 중심 | 총 {len(processed_articles)}개 기사
+                v7.0 - 모듈화 아키텍처 | 총 {len(processed_articles)}개 기사
             </p>
         </div>
         
@@ -179,7 +181,7 @@ def run_workflow():
         <div style="margin-top: 40px; padding: 20px; background-color: #ecf0f1; 
                     border-radius: 10px; text-align: center;">
             <p style="color: #7f8c8d; margin: 0;">
-                수소 뉴스 자동 브리핑 시스템 v3.0<br>
+                수소 뉴스 자동 브리핑 시스템 v7.0 (모듈화 아키텍처)<br>
                 생성 시간: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
             </p>
         </div>
@@ -192,13 +194,13 @@ def run_workflow():
     # ========================================
     print("\n[단계 4] 이메일 발송")
     
-    subject = f"[수소 브리핑 v3.0] {today_str} - {len(processed_articles)}개 기사"
+    subject = f"[수소 브리핑 v7.0] {today_str} - {len(processed_articles)}개 기사"
     
     success = send_email(subject, email_html)
     
     if success:
         print(f"\n{'=' * 80}")
-        print("🎉 수소 뉴스 브리핑 v3.0 완료!")
+        print("🎉 수소 뉴스 브리핑 v7.0 완료!")
         print(f"{'=' * 80}")
     else:
         print("\n⚠️  이메일 발송 실패")
