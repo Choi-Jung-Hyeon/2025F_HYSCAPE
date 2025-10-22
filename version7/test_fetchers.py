@@ -92,16 +92,40 @@ def test_naver_fetcher():
     print_header("Naver Fetcher 테스트")
     
     try:
+        # --- [수정된 부분 1] ---
+        # config.py에서 설정 가져오기
+        from config import NEWS_SOURCES, NAVER_KEYWORDS, MAX_NAVER_PER_KEYWORD
         from source_fetcher.naver_fetcher import NaverFetcher
         
         # 네이버 뉴스 테스트
         print("\n🔍 네이버 뉴스 검색 테스트")
-        fetcher = NaverFetcher()
-        test_keywords = ["수소", "수전해"]
-        articles = fetcher.fetch_articles_by_keywords(test_keywords, max_per_keyword=2)
+
+        # config.py에서 '네이버뉴스' 설정 로드
+        naver_config = NEWS_SOURCES.get('네이버뉴스')
+        
+        if not naver_config:
+            print("❌ config.py에 '네이버뉴스' 설정이 없습니다.")
+            return False
+        
+        if naver_config.get('status', 'inactive') != 'active':
+            print("⚠️ '네이버뉴스' 소스가 config.py에서 비활성화(inactive) 되어 있습니다.")
+            return False
+            
+        # --- [수정된 부분 2] ---
+        # 설정 딕셔너리 전체를 **kwargs로 전달
+        fetcher = NaverFetcher(**naver_config)
+        
+        # config.py에 정의된 키워드와 개수 사용
+        test_keywords = NAVER_KEYWORDS
+        max_count = MAX_NAVER_PER_KEYWORD
+        
+        print(f"   키워드: {test_keywords} (키워드당 {max_count}개)")
+        # --- [수정 완료] ---
+
+        articles = fetcher.fetch_articles_by_keywords(test_keywords, max_per_keyword=max_count)
         
         if articles:
-            print(f"✅ {len(articles)}개 기사 수집 성공\n")
+            print(f"\n✅ {len(articles)}개 기사 수집 성공\n")
             for i, article in enumerate(articles, 1):
                 print_article(article, i)
         else:
@@ -110,6 +134,8 @@ def test_naver_fetcher():
         return True
     except Exception as e:
         print(f"❌ Naver Fetcher 테스트 실패: {e}")
+        import traceback
+        traceback.print_exc()
         return False
 
 def test_google_fetcher():
