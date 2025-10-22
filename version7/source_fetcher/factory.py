@@ -87,8 +87,10 @@ class SourceFetcherFactory:
             )
         
         elif source_type in ['naver', 'google']:
-            # API Fetcher는 특별한 파라미터 불필요
-            return fetcher_class(**source_config.get('extra', {}))
+            # NaverFetcher/GoogleFetcher가 
+            # **kwargs에서 'extra' 키를 직접 찾을 수 있도록
+            # source_config 딕셔너리 전체를 전달합니다.
+            return fetcher_class(**source_config)
         
         else:
             # 기본 생성
