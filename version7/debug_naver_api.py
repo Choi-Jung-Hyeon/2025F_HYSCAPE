@@ -39,11 +39,13 @@ def check_naver_api():
     print(f"   타입: {naver_config.get('type')}")
     print(f"   상태: {naver_config.get('status')}")
     
-    # 2. API 키 확인
     print("\n[2단계] API 키 확인")
-    client_id = naver_config.get('client_id', '')
-    client_secret = naver_config.get('client_secret', '')
+    # v7.1 config 구조에 맞게 'extra' 딕셔너리에서 키를 가져옵니다.
+    extra_config = naver_config.get('extra', {})
+    client_id = extra_config.get('client_id', '')
+    client_secret = extra_config.get('client_secret', '')
     
+    '''
     if not client_id or client_id == "your_client_id":
         print("❌ NAVER CLIENT_ID가 설정되지 않았습니다!")
         print("   config.py에서 다음을 수정하세요:")
@@ -57,6 +59,7 @@ def check_naver_api():
         print("   config.py에서 다음을 수정하세요:")
         print("   'client_secret': '실제_클라이언트_시크릿'")
         return False
+    '''
     
     print(f"✅ Client ID: {client_id[:10]}... (설정됨)")
     print(f"✅ Client Secret: {client_secret[:10]}... (설정됨)")

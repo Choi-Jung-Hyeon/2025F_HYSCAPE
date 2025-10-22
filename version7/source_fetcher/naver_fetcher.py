@@ -30,19 +30,22 @@ class NaverFetcher(APIFetcher):
         → 애플리케이션 등록 → 검색 API 선택
     """
     
-    def __init__(self, client_id: str = None, client_secret: str = None, **kwargs):
+    def __init__(self, **kwargs):
         """
         네이버 뉴스 Fetcher 초기화 (API 방식)
         
         Args:
-            client_id: 네이버 API Client ID
-            client_secret: 네이버 API Client Secret
-            **kwargs: 추가 설정
+            **kwargs: 
+                - 'extra' (dict): {'client_id': '...', 'client_secret': '...'}
+                - (기타 APIFetcher 인수들)
         """
         super().__init__(source_name="네이버뉴스", **kwargs)
         
-        self.client_id = client_id
-        self.client_secret = client_secret
+        # v7.1: config.py의 'extra' 딕셔너리에서 API 키를 로드
+        extra_config = kwargs.get('extra', {})
+        self.client_id = extra_config.get('client_id')
+        self.client_secret = extra_config.get('client_secret')
+        
         self.api_url = "https://openapi.naver.com/v1/search/news.json"
         
         # API 키 검증
@@ -241,7 +244,11 @@ if __name__ == "__main__":
         print("   client_secret = 'your_client_secret'")
     else:
         # 테스트 실행
-        fetcher = NaverFetcher(client_id=client_id, client_secret=client_secret)
+        extra_test_config = {
+            "client_id": client_id,
+            "client_secret": client_secret
+        }
+        fetcher = NaverFetcher(extra=extra_test_config)
         
         # API 연결 테스트
         print("\n[테스트 1] API 연결 테스트")
