@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# article_collector.py (Notion Archive - Phase 1 - v2)
+# article_collector.py (Notion Archive - Phase 1 - v2.1)
 # (newspaper3k 라이브러리 제거, requests + BeautifulSoup4로 직접 파싱)
+# (v2.1: CSS 선택자 수정)
 
 import requests
 from bs4 import BeautifulSoup
@@ -17,7 +18,6 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 class H2NewsArchiveCollector:
     """
     기획서(PDF) 기반 '월간수소경제' 아카이브 수집기
-    [cite: 55-69]
     지정된 연도의 기사 목록(articleList)을 가져온 후,
     각 기사의 본문 내용을 직접 스크래핑합니다.
     """
@@ -49,13 +49,13 @@ class H2NewsArchiveCollector:
                     return dt.strftime('%Y-%m-%d')
         except Exception as e:
             logging.warning(f"날짜 파싱 오류: {e}")
-        # 실패 시 현재 날짜 반환 (Notion 필수 필드용)
+        # 실패 시 Notion 필수 필드용 임시 날짜 반환 (혹은 None 처리도 가능)
         return datetime.now().strftime('%Y-%m-%d')
 
     def fetch_article_content(self, article_url: str) -> dict:
         """
         개별 기사 URL을 받아 제목, 본문, 날짜를 스크래핑합니다.
-        (Newspaper 라이브러리 대체)
+        
         """
         full_url = urljoin(self.root_url, article_url)
         
@@ -99,7 +99,7 @@ class H2NewsArchiveCollector:
     def fetch_archive_by_year(self, year: int, max_pages: int = 1) -> list:
         """
         특정 연도의 기사 URL 목록을 수집합니다.
-        [cite: 63-66]
+        
         
         Args:
             year (int): 수집할 연도 (예: 2024)
@@ -113,7 +113,7 @@ class H2NewsArchiveCollector:
         for page in range(1, max_pages + 1):
             params = {
                 'page': page,
-                'page_size': 100, # PDF 기획안 기준 [cite: 66]
+                'page_size': 100, # PDF 기획안 기준
                 'year': year
             }
             
@@ -124,8 +124,10 @@ class H2NewsArchiveCollector:
                 
                 soup = BeautifulSoup(response.text, 'lxml')
                 
-                # H2News 목록 기준 (div.list-block)
-                article_links = soup.select("section.article-list-content div.list-block a")
+                # --- [수정된 선택자] ---
+                # H2News 목록 기준 (div.list-view-box 내의 h4.titles a 태그)
+                article_links = soup.select("div.list-view-box h4.titles a")
+                # ---------------------
                 
                 if not article_links:
                     logging.info(f"페이지 {page}에서 더 이상 기사를 찾을 수 없습니다. 수집을 중단합니다.")
@@ -154,12 +156,11 @@ class H2NewsArchiveCollector:
 
 # --- 이 모듈을 직접 실행할 경우를 위한 테스트 코드 ---
 if __name__ == "__main__":
-    logging.info("ArticleCollector (v2) 모듈 테스트를 시작합니다.")
+    logging.info("ArticleCollector (v2.1) 모듈 테스트를 시작합니다.")
     
     collector = H2NewsArchiveCollector()
     
     # PDF 기획안의 2024년 기준, 1페이지만 테스트
-    # [cite: 72]
     articles_2024 = collector.fetch_archive_by_year(year=2024, max_pages=1)
     
     if articles_2024:
