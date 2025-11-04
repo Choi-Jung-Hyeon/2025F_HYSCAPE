@@ -1,175 +1,178 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-# article_collector.py (v8.0)
-"""
-월간수소경제(H2News) 아카이브 기사 수집기
-- PDF 기획안  기반
-- 지정된 연도의 기사 목록(pagination)을 크롤링
-- newspaper3k를 사용해 개별 기사 본문 추출 (v7.0 `content_scraper` 로직 통합)
-"""
+# article_collector.py (Notion Archive - Phase 1 - v2)
+# (newspaper3k 라이브러리 제거, requests + BeautifulSoup4로 직접 파싱)
 
 import requests
 from bs4 import BeautifulSoup
-from newspaper import Article
 from urllib.parse import urljoin, urlparse
+import config  # config.py 파일 로드
 import logging
-from time import sleep
-from tqdm import tqdm
-from typing import List, Dict, Optional
+import time
+from datetime import datetime
 
-# 설정 파일 임포트
-import config
+# 로깅 설정
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
 class H2NewsArchiveCollector:
     """
-    월간수소경제의 특정 연도 과거 기사를 수집합니다.
-    (PDF [cite: 62] 'H2NewsArchiveCollector' 클래스 구현)
+    기획서(PDF) 기반 '월간수소경제' 아카이브 수집기
+    [cite: 55-69]
+    지정된 연도의 기사 목록(articleList)을 가져온 후,
+    각 기사의 본문 내용을 직접 스크래핑합니다.
     """
-    def __init__(self, year: int, limit: int = 0):
+    
+    def __init__(self):
         self.base_url = config.H2NEWS_ARCHIVE_URL
-        self.year = year
-        # 0이 아니면 테스트 리밋 적용 (PDF [cite: 1-302]의 테스트 요구사항)
-        self.limit = limit 
-        self.articles_found_count = 0
+        self.headers = config.DEFAULT_HEADERS
         self.session = requests.Session()
-        self.session.headers.update(config.DEFAULT_HEADERS)
+        self.session.headers.update(self.headers)
+        
+        # URL 루트 (e.g., https://www.h2news.kr)
+        parsed_uri = urlparse(self.base_url)
+        self.root_url = f"{parsed_uri.scheme}://{parsed_uri.netloc}"
 
-    def _get_soup(self, url: str) -> Optional[BeautifulSoup]:
-        """지정된 URL의 BeautifulSoup 객체를 반환합니다."""
+    def _parse_article_date(self, soup) -> str:
+        """
+        기사 본문 페이지에서 작성일(승인일)을 추출합니다.
+        (H2News는 '승인' 날짜를 사용)
+        """
         try:
-            response = self.session.get(url, timeout=config.REQUEST_TIMEOUT)
+            # H2News는 여러 날짜 li 항목 중 '승인'을 사용
+            date_items = soup.select("ul.infomation li")
+            for item in date_items:
+                text = item.get_text()
+                if "승인" in text:
+                    date_str = text.replace("승인", "").strip()
+                    # 'YYYY.MM.DD HH:MM' 형식을 'YYYY-MM-DD'로 변환
+                    dt = datetime.strptime(date_str, '%Y.%m.%d %H:%M')
+                    return dt.strftime('%Y-%m-%d')
+        except Exception as e:
+            logging.warning(f"날짜 파싱 오류: {e}")
+        # 실패 시 현재 날짜 반환 (Notion 필수 필드용)
+        return datetime.now().strftime('%Y-%m-%d')
+
+    def fetch_article_content(self, article_url: str) -> dict:
+        """
+        개별 기사 URL을 받아 제목, 본문, 날짜를 스크래핑합니다.
+        (Newspaper 라이브러리 대체)
+        """
+        full_url = urljoin(self.root_url, article_url)
+        
+        try:
+            response = self.session.get(full_url, timeout=10)
             response.raise_for_status()
-            return BeautifulSoup(response.text, 'html.parser')
-        except requests.RequestException as e:
-            logging.error(f"페이지 로드 실패 (URL: {url}): {e}")
+            
+            soup = BeautifulSoup(response.text, 'lxml')
+            
+            # 제목 추출 (H2News 기준)
+            title_tag = soup.select_one("header.article-view-header h3.heading")
+            title = title_tag.get_text(strip=True) if title_tag else "제목 없음"
+            
+            # 본문 추출 (H2News 기준)
+            content_div = soup.select_one("div#article-view-content-div")
+            if content_div:
+                # 불필요한 태그 제거 (광고, SCRIPT 등)
+                for unwanted in content_div.select("script, style, table, figure.figure-img-multi"):
+                    unwanted.decompose()
+                content = content_div.get_text(separator="\n", strip=True)
+            else:
+                content = "본문 없음"
+            
+            # 날짜 추출
+            date_str = self._parse_article_date(soup)
+            
+            return {
+                "title": title,
+                "content": content,
+                "url": full_url,
+                "date": date_str
+            }
+            
+        except requests.exceptions.RequestException as e:
+            logging.error(f"기사 내용 수집 실패 ({full_url}): {e}")
+            return None
+        except Exception as e:
+            logging.error(f"기사 파싱 중 알 수 없는 오류 ({full_url}): {e}")
             return None
 
-    def fetch_archive_by_year(self) -> List[Dict[str, str]]:
+    def fetch_archive_by_year(self, year: int, max_pages: int = 1) -> list:
         """
-        특정 연도의 모든 기사 URL과 제목, 날짜를 수집합니다.
-        (PDF [cite: 63] `fetch_archive_by_year` 메서드 구현)
+        특정 연도의 기사 URL 목록을 수집합니다.
+        [cite: 63-66]
         
-        월간수소경제는 페이지네이션(pagination)을 사용합니다.
-        (예: ...articleList.html?page=2&year=2024)
+        Args:
+            year (int): 수집할 연도 (예: 2024)
+            max_pages (int): 수집할 최대 페이지 수 (테스트용)
+        
+        Returns:
+            list: 기사 정보(title, content, url, date) 딕셔너리의 리스트
         """
-        logging.info(f"===== {self.year}년 월간수소경제 아카이브 수집 시작 =====")
-        collected_articles = []
-        page = 1
+        articles = []
         
-        while True:
-            # 테스트 리밋에 도달하면 중단
-            if self.limit > 0 and self.articles_found_count >= self.limit:
-                logging.info(f"테스트 리밋 ({self.limit}개)에 도달하여 수집을 중단합니다.")
-                break
-
+        for page in range(1, max_pages + 1):
             params = {
-                "page": page,
-                "year": self.year,
-                "sc_section_code": "S1N1" # "뉴스" 섹션 코드
+                'page': page,
+                'page_size': 100, # PDF 기획안 기준 [cite: 66]
+                'year': year
             }
-            logging.info(f"{self.year}년 {page}페이지 수집 중...")
-            soup = self._get_soup(self.base_url)
-            if not soup:
-                break
-
-            # PDF 의 CSS 선택자 아이디어를 적용
-            article_list = soup.select("ul.art_list > li") 
             
-            if not article_list:
-                logging.info(f"{page}페이지에 기사가 없습니다. {self.year}년 수집을 종료합니다.")
-                break # 기사가 더 이상 없으면 종료
-
-            for item in article_list:
-                if self.limit > 0 and self.articles_found_count >= self.limit:
+            try:
+                logging.info(f"{year}년 기사 목록 수집 중... (Page {page}/{max_pages})")
+                response = self.session.get(self.base_url, params=params, timeout=10)
+                response.raise_for_status()
+                
+                soup = BeautifulSoup(response.text, 'lxml')
+                
+                # H2News 목록 기준 (div.list-block)
+                article_links = soup.select("section.article-list-content div.list-block a")
+                
+                if not article_links:
+                    logging.info(f"페이지 {page}에서 더 이상 기사를 찾을 수 없습니다. 수집을 중단합니다.")
                     break
                 
-                title_tag = item.select_one("h2.titles a")
-                date_tag = item.select_one("span.date")
-                
-                if title_tag and date_tag:
-                    title = title_tag.get_text(strip=True)
-                    relative_url = title_tag['href']
-                    absolute_url = urljoin(self.base_url, relative_url)
-                    date_str = date_tag.get_text(strip=True)
-                    
-                    collected_articles.append({
-                        "title": title,
-                        "url": absolute_url,
-                        "date_str": date_str,
-                        "year": self.year,
-                        "source": "월간수소경제"
-                    })
-                    self.articles_found_count += 1
-
-            # 페이지네이션의 '다음' 버튼이 비활성화되었는지 확인 (더 정확한 종료 조건)
-            next_page_tag = soup.select_one("a.next-page")
-            if not next_page_tag or 'disabled' in next_page_tag.get('class', []):
-                logging.info(f"마지막 페이지({page}p)에 도달했습니다. {self.year}년 수집을 종료합니다.")
+                for link in article_links:
+                    article_url = link.get('href')
+                    if article_url and not article_url.startswith('http'):
+                        
+                        # 기사 본문 즉시 수집
+                        article_data = self.fetch_article_content(article_url)
+                        if article_data:
+                            articles.append(article_data)
+                        
+                        time.sleep(0.5) # 서버 부하 방지
+            
+            except requests.exceptions.RequestException as e:
+                logging.error(f"기사 목록 수집 실패 (Page {page}): {e}")
+                break
+            except Exception as e:
+                logging.error(f"알 수 없는 오류 (Page {page}): {e}")
                 break
                 
-            page += 1
-            sleep(0.5) # 서버 부하 방지
+        logging.info(f"총 {len(articles)}개의 기사 수집 완료 (Year: {year}, Max Pages: {max_pages})")
+        return articles
 
-        logging.info(f"총 {self.articles_found_count}개의 {self.year}년 기사 메타데이터 수집 완료.")
-        return collected_articles
-
-    def fetch_article_content(self, url: str) -> Optional[str]:
-        """
-        개별 기사 URL에서 본문을 추출합니다.
-        (PDF [cite: 67] `fetch_article_content` 메서드 및 v7.0 `content_scraper` 로직)
-        """
-        try:
-            # newspaper3k 설정
-            article = Article(url, language='ko')
-            article.download(input_html=self.session.get(url, timeout=config.REQUEST_TIMEOUT).text)
-            article.parse()
-            return article.text
-        except Exception as e:
-            logging.warning(f"Newspaper3k 본문 추출 실패 (URL: {url}): {e}")
-            return None
-
-    def run(self) -> List[Dict[str, str]]:
-        """전체 수집 워크플로우를 실행합니다."""
-        
-        # 1. 연도별 기사 목록 수집
-        articles_meta = self.fetch_archive_by_year()
-        
-        if not articles_meta:
-            logging.warning(f"{self.year}년에 수집된 기사가 없습니다.")
-            return []
-
-        # 2. 각 기사 본문 추출 (tqdm으로 진행률 표시)
-        logging.info(f"{len(articles_meta)}개 기사의 본문 추출을 시작합니다...")
-        final_articles_with_content = []
-        
-        for meta in tqdm(articles_meta, desc=f"{self.year}년 본문 추출 중"):
-            content = self.fetch_article_content(meta['url'])
-            if content:
-                meta['content'] = content
-                final_articles_with_content.append(meta)
-            else:
-                logging.warning(f"본문 추출 실패: {meta['title']} ({meta['url']})")
-            sleep(0.2) # 서버 부하 방지
-
-        logging.info(f"총 {len(final_articles_with_content)}개 기사의 본문 추출 완료.")
-        return final_articles_with_content
-
-if __name__ == '__main__':
-    # 이 파일을 직접 실행할 경우 테스트 수행
-    logging.basicConfig(level=logging.INFO)
+# --- 이 모듈을 직접 실행할 경우를 위한 테스트 코드 ---
+if __name__ == "__main__":
+    logging.info("ArticleCollector (v2) 모듈 테스트를 시작합니다.")
     
-    # 2024년 기사 5개만 테스트 (PDF [cite: 1-302]의 테스트 요구사항)
-    TEST_YEAR = 2024
-    TEST_LIMIT = 5 
+    collector = H2NewsArchiveCollector()
     
-    collector = H2NewsArchiveCollector(year=TEST_YEAR, limit=TEST_LIMIT)
-    articles = collector.run()
+    # PDF 기획안의 2024년 기준, 1페이지만 테스트
+    # [cite: 72]
+    articles_2024 = collector.fetch_archive_by_year(year=2024, max_pages=1)
     
-    print(f"\n===== {TEST_YEAR}년 테스트 수집 결과 (상위 {TEST_LIMIT}개) =====")
-    for i, article in enumerate(articles):
-        print(f"\n[{i+1}] {article['title']}")
-        print(f"  - URL: {article['url']}")
-        print(f"  - Date: {article['date_str']}")
-        print(f"  - Content (첫 50자): {article['content'][:50]}...")
-    print(f"\n==========================================")
-    print(f"총 {len(articles)}개 기사 수집 및 본문 추출 성공")
+    if articles_2024:
+        logging.info(f"--- 수집된 기사 샘플 (총 {len(articles_2024)}개) ---")
+        
+        # 상위 3개 기사 샘플 출력
+        for i, article in enumerate(articles_2024[:3]):
+            print("\n" + "="*30 + f" 샘플 {i+1} " + "="*30)
+            print(f"  [날짜] {article['date']}")
+            print(f"  [제목] {article['title']}")
+            print(f"  [URL] {article['url']}")
+            print(f"  [본문] {article['content'][:150]}...")
+        
+        logging.info("\n테스트 성공: 기사 목록 및 본문 수집이 정상적으로 완료되었습니다.")
+    else:
+        logging.error("테스트 실패: 기사를 수집하지 못했습니다.")
