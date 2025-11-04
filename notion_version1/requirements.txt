@@ -1,0 +1,10 @@
+# v7.0 (일일 브리핑)과 공통된 라이브러리
+google-generativeai
+requests
+beautifulsoup4
+newspaper3k
+tqdm
+pydantic
+
+# v8.0 (아카이브)에 신규 추가된 라이브러리
+notion-client
