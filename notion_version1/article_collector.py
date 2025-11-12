@@ -12,6 +12,7 @@ import logging
 import time
 from datetime import datetime
 import os # v2.2: 파일 저장을 위해 추가
+import re
 
 # 로깅 설정
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -50,44 +51,72 @@ class H2NewsArchiveCollector:
             logging.warning(f"날짜 파싱 오류: {e}")
         return datetime.now().strftime('%Y-%m-%d')
 
-    def fetch_article_content(self, article_url: str) -> dict:
+    def fetch_article_content(self, article_url):
         """
-        개별 기사 URL을 받아 제목, 본문, 날짜를 스크래핑합니다.
+        개별 기사 페이지에 접속하여 제목, 본문, 날짜를 스크래핑합니다.
+        (v2.3: 본문 페이지 선택자 수정)
         """
-        full_url = urljoin(self.root_url, article_url)
-        
+        full_url = urljoin(self.base_url, article_url)
+
         try:
             response = self.session.get(full_url, timeout=10)
+
+            # --- [v2.3 디버깅 코드 추가] ---
+            # (이 코드는 v2.2에서 추가한 것이므로 그대로 두거나, 
+            #  이제 문제가 해결되었는지 확인 후 삭제하셔도 됩니다.)
+            if "debug_article_page_created" not in globals():
+                globals()["debug_article_page_created"] = True 
+                debug_file = "debug_article_page.html"
+                try:
+                    with open(debug_file, "w", encoding="utf-8") as f:
+                        f.write(response.text)
+                    logging.info(f"기사 본문 디버깅 파일 '{debug_file}'이 생성되었습니다.")
+                except Exception as e:
+                    logging.error(f"기사 본문 디버깅 파일 저장 실패: {e}")
+            # --- [디버깅 코드 끝] ---
+
             response.raise_for_status()
-            
             soup = BeautifulSoup(response.text, 'lxml')
-            
-            title_tag = soup.select_one("header.article-view-header h3.heading")
-            title = title_tag.get_text(strip=True) if title_tag else "제목 없음"
-            
-            content_div = soup.select_one("div#article-view-content-div")
-            if content_div:
-                for unwanted in content_div.select("script, style, table, figure.figure-img-multi"):
-                    unwanted.decompose()
-                content = content_div.get_text(separator="\n", strip=True)
-            else:
-                content = "본문 없음"
-            
-            date_str = self._parse_article_date(soup)
-            
+
+            # --- [v2.3 선택자 수정] ---
+            # 1. 제목 (Title)
+            title_elem = soup.select_one("h1.titles#user-tit")
+            title = title_elem.get_text().strip() if title_elem else "제목 없음"
+
+            # 2. 날짜 (Date) - 로직 변경
+            date_elem = soup.select_one("i.icon-clock-o")
+            date_text = ""
+            if date_elem:
+                date_text = date_elem.parent.get_text() # <li><i class="icon-clock-o"></i> 2025.11.12 08:55</li>
+
+            date_match = re.search(r'(\d{4}[-\.]\d{2}[-\.]\d{2})', date_text)
+            date = date_match.group(1).replace('.', '-') if date_match else datetime.now().strftime('%Y-%m-%d')
+
+            # 3. 본문 (Body)
+            body_elem = soup.select_one("div#article-view-content-div")
+            body = body_elem.get_text().strip() if body_elem else "본문 없음"
+            # --- [수정 끝] ---
+
+            if body == "본문 없음":
+                logging.warning(f"본문 수집 실패: {full_url}")
+
             return {
-                "title": title,
-                "content": content,
-                "url": full_url,
-                "date": date_str
+                'title': title,
+                'content': body,
+                'date': date,
+                'url': full_url
             }
-            
-        except requests.exceptions.RequestException as e:
-            logging.error(f"기사 내용 수집 실패 ({full_url}): {e}")
-            return None
+
+        except requests.RequestException as e:
+            logging.error(f"기사 본문({full_url}) 요청 실패: {e}")
         except Exception as e:
-            logging.error(f"기사 파싱 중 알 수 없는 오류 ({full_url}): {e}")
-            return None
+            logging.error(f"기사 본문({full_url}) 처리 중 오류: {e}")
+
+        return {
+            'title': '제목 없음',
+            'content': '본문 없음',
+            'date': datetime.now().strftime('%Y-%m-%d')
+        }
 
     def fetch_archive_by_year(self, year: int, max_pages: int = 1, debug: bool = False) -> list:
         """
@@ -125,7 +154,7 @@ class H2NewsArchiveCollector:
                 soup = BeautifulSoup(response.text, 'lxml')
                 
                 # v2.1 선택자 유지 (이전 테스트에서 실패했으나, 페이지 크기 변경 후 재시도)
-                article_links = soup.select("div.list-view-box h4.titles a")
+                article_links = soup.select("section#section-list ul.type-list H2.titles a")
                 
                 if not article_links:
                     logging.warning(f"페이지 {page}에서 기사 링크를 찾을 수 없습니다.")
