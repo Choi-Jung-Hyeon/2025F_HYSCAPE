@@ -18,7 +18,7 @@ import config
 
 # 로깅 설정
 logging.basicConfig(
-    level=logging.INFO,  # INFO로 설정 (필요시 DEBUG로 변경)
+    level=logging.INFO,
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
@@ -131,16 +131,51 @@ class BriefingAnalyzer:
             # 프롬프트 생성
             prompt = config.ANALYSIS_PROMPT.format(content=text)
             
-            # Gemini API 호출
+            # Gemini API 호출 (⭐ Safety Settings 완화)
             logger.debug("  Gemini API 호출 중...")
+            
+            # Safety settings 완화 (PDF 브리핑 분석용)
+            safety_settings = [
+                {
+                    "category": "HARM_CATEGORY_HARASSMENT",
+                    "threshold": "BLOCK_NONE"
+                },
+                {
+                    "category": "HARM_CATEGORY_HATE_SPEECH",
+                    "threshold": "BLOCK_NONE"
+                },
+                {
+                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
+                    "threshold": "BLOCK_NONE"
+                },
+                {
+                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
+                    "threshold": "BLOCK_NONE"
+                }
+            ]
             
             response = self.model.generate_content(
                 prompt,
                 generation_config=genai.types.GenerationConfig(
                     temperature=0.3,
                     max_output_tokens=500
-                )
+                ),
+                safety_settings=safety_settings
             )
+            
+            # 응답 확인
+            if not response.candidates:
+                logger.error("  ❌ Gemini 응답 없음")
+                return None
+            
+            # finish_reason 확인
+            finish_reason = response.candidates[0].finish_reason
+            if finish_reason != 1:  # 1 = STOP (정상)
+                logger.warning(f"  ⚠️ 비정상 종료: finish_reason={finish_reason}")
+                # 2=SAFETY, 3=RECITATION, 4=OTHER
+                if finish_reason == 2:
+                    logger.error("  안전 필터에 걸렸습니다. 내용을 확인해주세요.")
+                return None
             
             # 응답 파싱
             result_text = response.text.strip()
