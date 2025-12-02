@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-PDF 브리핑 분석 모듈
-pdfplumber로 PDF 텍스트를 추출하고, Google Gemini API로 요약 및 감성 분석을 수행합니다.
+PDF 브리핑 분석 모듈 (안전 필터 우회 버전)
 """
 
 import logging
@@ -25,13 +24,7 @@ logger = logging.getLogger(__name__)
 
 
 class BriefingAnalyzer:
-    """
-    PDF 브리핑 분석 클래스
-    
-    주요 기능:
-    1. PDF 텍스트 추출 (pdfplumber)
-    2. Google Gemini를 사용한 요약 및 감성 분석
-    """
+    """PDF 브리핑 분석 클래스"""
     
     def __init__(self):
         """Google Gemini 클라이언트 초기화"""
@@ -41,20 +34,7 @@ class BriefingAnalyzer:
         logger.info(f"BriefingAnalyzer 초기화 완료 (모델: {config.GEMINI_MODEL})")
     
     def analyze_briefing(self, pdf_path: str) -> Optional[Dict]:
-        """
-        PDF 브리핑 파일을 분석하는 메인 메서드
-        
-        Args:
-            pdf_path: PDF 파일 경로
-            
-        Returns:
-            Dict: 분석 결과
-                {
-                    'summary': '3줄 요약',
-                    'sentiment': 'Positive/Negative/Neutral'
-                }
-                실패 시 None 반환
-        """
+        """PDF 브리핑 파일 분석"""
         logger.info(f"\n📊 분석 시작: {Path(pdf_path).name}")
         
         # 1. PDF 텍스트 추출
@@ -66,8 +46,25 @@ class BriefingAnalyzer:
         
         logger.info(f"  ✅ 텍스트 추출 완료 ({len(text)} 자)")
         
-        # 2. Gemini API로 분석
-        analysis = self._analyze_with_gemini(text)
+        # 2. Gemini API로 분석 (여러 전략 시도)
+        analysis = None
+        
+        # 전략 1: 짧은 텍스트로 시도 (첫 3000자)
+        if not analysis and len(text) > 3000:
+            logger.info("  📝 전략 1: 짧은 텍스트로 시도...")
+            short_text = text[:3000]
+            analysis = self._analyze_with_gemini(short_text, strategy="short")
+        
+        # 전략 2: 전체 텍스트 (최대 10000자)
+        if not analysis:
+            logger.info("  📝 전략 2: 전체 텍스트로 시도...")
+            limited_text = text[:10000]
+            analysis = self._analyze_with_gemini(limited_text, strategy="full")
+        
+        # 전략 3: 매우 간단한 프롬프트
+        if not analysis:
+            logger.info("  📝 전략 3: 간단한 프롬프트로 시도...")
+            analysis = self._analyze_simple(text[:5000])
         
         if analysis:
             logger.info(f"  ✅ 분석 완료")
@@ -77,31 +74,17 @@ class BriefingAnalyzer:
         return analysis
     
     def _extract_text_from_pdf(self, pdf_path: str) -> str:
-        """
-        pdfplumber를 사용하여 PDF에서 텍스트 추출
-        
-        Args:
-            pdf_path: PDF 파일 경로
-            
-        Returns:
-            str: 추출된 텍스트
-        """
+        """PDF에서 텍스트 추출"""
         try:
             text_parts = []
             
             with pdfplumber.open(pdf_path) as pdf:
-                logger.debug(f"  페이지 수: {len(pdf.pages)}")
-                
-                for page_num, page in enumerate(pdf.pages, 1):
+                for page in pdf.pages:
                     page_text = page.extract_text()
-                    
                     if page_text:
                         text_parts.append(page_text)
-                        logger.debug(f"    페이지 {page_num}: {len(page_text)} 자 추출")
             
             full_text = "\n\n".join(text_parts)
-            
-            # 불필요한 공백 정리
             full_text = re.sub(r'\n{3,}', '\n\n', full_text)
             full_text = re.sub(r' {2,}', ' ', full_text)
             
@@ -111,48 +94,22 @@ class BriefingAnalyzer:
             logger.error(f"  ❌ PDF 텍스트 추출 실패: {e}")
             return ""
     
-    def _analyze_with_gemini(self, text: str) -> Optional[Dict]:
-        """
-        Google Gemini API를 사용하여 텍스트 분석
-        
-        Args:
-            text: 분석할 텍스트
-            
-        Returns:
-            Dict: 분석 결과 {'summary': ..., 'sentiment': ...}
-        """
+    def _analyze_with_gemini(self, text: str, strategy: str = "full") -> Optional[Dict]:
+        """Gemini API로 텍스트 분석"""
         try:
-            # 텍스트가 너무 길면 잘라내기
-            max_chars = 30000
-            if len(text) > max_chars:
-                logger.info(f"  텍스트가 너무 깁니다. {max_chars}자로 제한합니다.")
-                text = text[:max_chars] + "..."
+            # 프롬프트 생성 (전략에 따라)
+            if strategy == "short":
+                prompt = self._create_safe_prompt(text)
+            else:
+                prompt = config.ANALYSIS_PROMPT.format(content=text)
             
-            # 프롬프트 생성
-            prompt = config.ANALYSIS_PROMPT.format(content=text)
-            
-            # Gemini API 호출 (⭐ Safety Settings 완화)
-            logger.debug("  Gemini API 호출 중...")
-            
-            # Safety settings 완화 (PDF 브리핑 분석용)
-            safety_settings = [
-                {
-                    "category": "HARM_CATEGORY_HARASSMENT",
-                    "threshold": "BLOCK_NONE"
-                },
-                {
-                    "category": "HARM_CATEGORY_HATE_SPEECH",
-                    "threshold": "BLOCK_NONE"
-                },
-                {
-                    "category": "HARM_CATEGORY_SEXUALLY_EXPLICIT",
-                    "threshold": "BLOCK_NONE"
-                },
-                {
-                    "category": "HARM_CATEGORY_DANGEROUS_CONTENT",
-                    "threshold": "BLOCK_NONE"
-                }
-            ]
+            # Safety settings (최대한 완화)
+            safety_settings = {
+                genai.types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                genai.types.HarmCategory.HARM_CATEGORY_HARASSMENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                genai.types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                genai.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+            }
             
             response = self.model.generate_content(
                 prompt,
@@ -165,70 +122,110 @@ class BriefingAnalyzer:
             
             # 응답 확인
             if not response.candidates:
-                logger.error("  ❌ Gemini 응답 없음")
+                logger.warning(f"  ⚠️ 응답 없음 (전략: {strategy})")
                 return None
             
             # finish_reason 확인
             finish_reason = response.candidates[0].finish_reason
             if finish_reason != 1:  # 1 = STOP (정상)
-                logger.warning(f"  ⚠️ 비정상 종료: finish_reason={finish_reason}")
-                # 2=SAFETY, 3=RECITATION, 4=OTHER
+                logger.warning(f"  ⚠️ 비정상 종료: finish_reason={finish_reason} (전략: {strategy})")
                 if finish_reason == 2:
-                    logger.error("  안전 필터에 걸렸습니다. 내용을 확인해주세요.")
+                    logger.warning(f"  안전 필터 차단 (전략: {strategy})")
                 return None
-            
-            # 응답 파싱
-            result_text = response.text.strip()
-            
-            # 디버깅: 원본 응답 출력
-            logger.debug(f"  Gemini 원본 응답:\n{result_text}")
-            
-            # JSON 추출
-            json_text = self._extract_json(result_text)
-            logger.debug(f"  추출된 JSON: {json_text}")
             
             # JSON 파싱
+            result_text = response.text.strip()
+            json_text = self._extract_json(result_text)
             analysis = json.loads(json_text)
             
-            # 검증
-            if not self._validate_analysis(analysis):
-                logger.warning("  ⚠️ 분석 결과 검증 실패")
-                return None
+            if self._validate_analysis(analysis):
+                return analysis
             
-            return analysis
-            
-        except json.JSONDecodeError as e:
-            logger.error(f"  ❌ JSON 파싱 실패: {e}")
-            logger.error(f"  원본 응답:\n{result_text}")
-            logger.error(f"  추출된 JSON:\n{json_text}")
             return None
             
         except Exception as e:
-            logger.error(f"  ❌ Gemini 분석 실패: {e}")
-            import traceback
-            logger.error(f"  상세 오류:\n{traceback.format_exc()}")
+            logger.warning(f"  ⚠️ 분석 실패 (전략: {strategy}): {e}")
             return None
     
-    def _extract_json(self, text: str) -> str:
-        """
-        텍스트에서 JSON 부분만 추출 (개선된 버전)
-        
-        Args:
-            text: 원본 텍스트
+    def _analyze_simple(self, text: str) -> Optional[Dict]:
+        """매우 간단한 프롬프트로 분석"""
+        try:
+            # 매우 중립적인 프롬프트
+            simple_prompt = f"""
+다음 텍스트를 읽고 JSON 형식으로 답변해주세요:
+
+1. summary: 핵심 내용 3줄 요약
+2. sentiment: Positive/Negative/Neutral 중 하나
+
+JSON 형식:
+{{
+  "summary": "요약 내용",
+  "sentiment": "Positive"
+}}
+
+텍스트:
+{text[:3000]}
+"""
             
-        Returns:
-            str: JSON 문자열
-        """
-        # 1. 마크다운 코드 블록 제거
+            # Safety settings
+            safety_settings = {
+                genai.types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                genai.types.HarmCategory.HARM_CATEGORY_HARASSMENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                genai.types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                genai.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+            }
+            
+            response = self.model.generate_content(
+                simple_prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.5,
+                    max_output_tokens=300
+                ),
+                safety_settings=safety_settings
+            )
+            
+            if response.candidates and response.candidates[0].finish_reason == 1:
+                result_text = response.text.strip()
+                json_text = self._extract_json(result_text)
+                analysis = json.loads(json_text)
+                
+                if self._validate_analysis(analysis):
+                    return analysis
+            
+            return None
+            
+        except Exception as e:
+            logger.warning(f"  ⚠️ 간단한 분석 실패: {e}")
+            return None
+    
+    def _create_safe_prompt(self, text: str) -> str:
+        """안전한 프롬프트 생성"""
+        return f"""
+아래는 수소 산업 뉴스 브리핑입니다. 내용을 요약하고 분석해주세요.
+
+요구사항:
+- summary: 주요 내용을 3줄로 요약
+- sentiment: 전반적인 톤이 긍정적(Positive), 부정적(Negative), 중립적(Neutral) 중 어느 쪽인지 판단
+
+JSON 형식으로만 답변:
+{{
+  "summary": "요약 내용",
+  "sentiment": "Positive/Negative/Neutral"
+}}
+
+브리핑 내용:
+{text}
+"""
+    
+    def _extract_json(self, text: str) -> str:
+        """텍스트에서 JSON 추출"""
         text = re.sub(r'```json\s*', '', text, flags=re.IGNORECASE)
         text = re.sub(r'```\s*', '', text)
         
-        # 2. 중괄호로 시작하고 끝나는 JSON 객체 찾기
         start = text.find('{')
         if start == -1:
             return text.strip()
         
-        # 중괄호 매칭으로 JSON 끝 찾기
         count = 0
         end = start
         for i in range(start, len(text)):
@@ -241,45 +238,20 @@ class BriefingAnalyzer:
                     break
         
         if end > start:
-            json_text = text[start:end]
-            return json_text.strip()
+            return text[start:end].strip()
         
-        # 3. 정규식으로 시도
-        json_match = re.search(r'\{[^{}]*"summary"[^{}]*"sentiment"[^{}]*\}', text, re.DOTALL)
-        if json_match:
-            return json_match.group(0)
-        
-        # 4. 실패 시 전체 텍스트 반환
         return text.strip()
     
     def _validate_analysis(self, analysis: Dict) -> bool:
-        """
-        분석 결과 검증
-        
-        Args:
-            analysis: 분석 결과 딕셔너리
-            
-        Returns:
-            bool: 유효성 여부
-        """
-        # 필수 키 확인
-        required_keys = ['summary', 'sentiment']
-        
-        for key in required_keys:
-            if key not in analysis:
-                logger.warning(f"  필수 키 누락: {key}")
-                return False
-        
-        # summary 검증
-        if not isinstance(analysis['summary'], str) or len(analysis['summary']) < 10:
-            logger.warning("  요약이 너무 짧습니다")
+        """분석 결과 검증"""
+        if 'summary' not in analysis or 'sentiment' not in analysis:
             return False
         
-        # sentiment 검증 및 자동 보정
+        if len(analysis['summary']) < 10:
+            return False
+        
         valid_sentiments = ['Positive', 'Negative', 'Neutral']
         if analysis['sentiment'] not in valid_sentiments:
-            logger.warning(f"  잘못된 sentiment 값: {analysis['sentiment']}")
-            # 자동 보정 시도
             sentiment_lower = str(analysis['sentiment']).lower()
             if 'positive' in sentiment_lower or '긍정' in sentiment_lower:
                 analysis['sentiment'] = 'Positive'
@@ -287,14 +259,12 @@ class BriefingAnalyzer:
                 analysis['sentiment'] = 'Negative'
             else:
                 analysis['sentiment'] = 'Neutral'
-            logger.info(f"  sentiment 자동 보정: {analysis['sentiment']}")
         
         return True
 
 
 def main():
     """테스트용 메인 함수"""
-    # 샘플 PDF 파일로 테스트
     sample_pdf = Path("../pdf/250925_일간 수소 이슈 브리핑.pdf")
     
     if not sample_pdf.exists():
