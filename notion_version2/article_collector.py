@@ -25,7 +25,7 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class H2HubCollector:
+class H2HUBBriefingCollector:
     """
     한국수소연합(H2HUB) 브리핑 수집 클래스
     
@@ -304,7 +304,7 @@ class H2HubCollector:
 
 def main():
     """테스트용 메인 함수"""
-    collector = H2HubCollector()
+    collector = H2HUBBriefingCollector()
     results = collector.collect_briefings(max_pages=2)
     
     print("\n" + "=" * 70)
