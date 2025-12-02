@@ -1,18 +1,19 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-한국수소연합(H2HUB) 브리핑 자동화 시스템 - 메인 실행 스크립트
+한국수소연합(H2HUB) 브리핑 자동화 시스템 - 메인 실행 파일
 """
 
 import logging
-import argparse
+import sys
 from pathlib import Path
-from typing import List, Dict
+from typing import List
+import argparse
 
-import config
 from article_collector import H2HUBBriefingCollector
 from article_analyzer import BriefingAnalyzer
 from notion_uploader import NotionUploader
+import config
 
 # 로깅 설정
 logging.basicConfig(
@@ -22,42 +23,30 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class H2HUBAutomation:
-    """
-    한국수소연합 브리핑 자동화 시스템 메인 클래스
-    
-    워크플로우:
-    1. 브리핑 PDF 수집
-    2. PDF 분석 (요약 + 감성 분석)
-    3. Notion에 업로드
-    """
+class H2HubAutomation:
+    """H2HUB 브리핑 자동화 시스템"""
     
     def __init__(self):
         """컴포넌트 초기화"""
-        logger.info("\n" + "="*70)
-        logger.info("한국수소연합 브리핑 자동화 시스템 시작")
-        logger.info("="*70)
-        
         self.collector = H2HUBBriefingCollector()
         self.analyzer = BriefingAnalyzer()
         self.uploader = NotionUploader()
         
-        logger.info("✅ 모든 컴포넌트 초기화 완료\n")
+        logger.info("✅ 모든 컴포넌트 초기화 완료")
     
-    def run(self, max_pages: int = 3, upload_to_notion: bool = True):
+    def run_full_workflow(self, num_pages: int = 1, upload_to_notion: bool = True):
         """
-        전체 자동화 프로세스 실행
-        
-        Args:
-            max_pages: 수집할 최대 페이지 수
-            upload_to_notion: Notion 업로드 여부
+        전체 워크플로우 실행
+        1. H2HUB에서 브리핑 수집
+        2. 내용 분석
+        3. Notion에 업로드
         """
-        # Step 1: 브리핑 수집
         logger.info("\n" + "="*70)
         logger.info("STEP 1: 브리핑 PDF 수집")
         logger.info("="*70)
         
-        briefings = self.collector.collect_briefings(max_pages=max_pages)
+        # 1. 브리핑 수집
+        briefings = self.collector.collect_briefings(num_pages=num_pages)
         
         if not briefings:
             logger.warning("⚠️ 수집된 브리핑이 없습니다.")
@@ -65,9 +54,9 @@ class H2HUBAutomation:
         
         logger.info(f"\n✅ {len(briefings)}개의 브리핑 수집 완료")
         
-        # Step 2 & 3: 분석 및 업로드
+        # 2. 분석 및 업로드
         logger.info("\n" + "="*70)
-        logger.info("STEP 2: PDF 분석 및 STEP 3: Notion 업로드")
+        logger.info("STEP 2: 브리핑 분석 및 업로드")
         logger.info("="*70)
         
         success_count = 0
@@ -87,7 +76,10 @@ class H2HUBAutomation:
                 
                 # Notion 업로드
                 if upload_to_notion:
-                    upload_success = self.uploader.upload_briefing(briefing, analysis)
+                    # briefing과 analysis를 하나의 딕셔너리로 병합 ⭐
+                    briefing_data = {**briefing, **analysis}
+                    
+                    upload_success = self.uploader.upload_briefing(briefing_data)
                     
                     if upload_success:
                         success_count += 1
@@ -98,11 +90,15 @@ class H2HUBAutomation:
                     
                     # 분석 결과 출력
                     print(f"\n    감성: {analysis['sentiment']}")
+                    print(f"    카테고리: {analysis.get('category', 'N/A')}")
+                    print(f"    키워드: {', '.join(analysis.get('keywords', []))}")
                     print(f"    요약: {analysis['summary'][:100]}...")
                     success_count += 1
                     
             except Exception as e:
                 logger.error(f"  ❌ 처리 중 오류 발생: {e}")
+                import traceback
+                traceback.print_exc()
                 fail_count += 1
                 continue
         
@@ -118,22 +114,17 @@ class H2HUBAutomation:
     def run_with_existing_pdfs(self, pdf_dir: Path, upload_to_notion: bool = True):
         """
         기존 PDF 파일들을 분석하여 업로드
-        (웹 크롤링 없이 로컬 PDF만 처리)
-        
-        Args:
-            pdf_dir: PDF 파일이 있는 디렉토리
-            upload_to_notion: Notion 업로드 여부
         """
         logger.info("\n" + "="*70)
         logger.info("기존 PDF 파일 분석 모드")
         logger.info("="*70)
         logger.info(f"디렉토리: {pdf_dir}")
         
-        # PDF 파일 찾기
-        pdf_files = list(pdf_dir.glob("*.pdf"))
+        # PDF 파일 목록 가져오기
+        pdf_files = sorted(pdf_dir.glob("*.pdf"))
         
         if not pdf_files:
-            logger.warning(f"⚠️ PDF 파일을 찾을 수 없습니다: {pdf_dir}")
+            logger.warning(f"⚠️ {pdf_dir}에 PDF 파일이 없습니다.")
             return
         
         logger.info(f"\n✅ {len(pdf_files)}개의 PDF 파일 발견")
@@ -163,7 +154,10 @@ class H2HUBAutomation:
                 
                 # Notion 업로드
                 if upload_to_notion:
-                    upload_success = self.uploader.upload_briefing(briefing_data, analysis)
+                    # briefing_data와 analysis를 병합 ⭐
+                    briefing_data.update(analysis)
+                    
+                    upload_success = self.uploader.upload_briefing(briefing_data)
                     
                     if upload_success:
                         success_count += 1
@@ -171,11 +165,15 @@ class H2HUBAutomation:
                         fail_count += 1
                 else:
                     print(f"\n    감성: {analysis['sentiment']}")
+                    print(f"    카테고리: {analysis.get('category', 'N/A')}")
+                    print(f"    키워드: {', '.join(analysis.get('keywords', []))}")
                     print(f"    요약: {analysis['summary'][:100]}...")
                     success_count += 1
                     
             except Exception as e:
                 logger.error(f"  ❌ 처리 중 오류 발생: {e}")
+                import traceback
+                traceback.print_exc()
                 fail_count += 1
                 continue
         
@@ -190,68 +188,46 @@ class H2HUBAutomation:
     def _extract_date_from_filename(self, filename: str) -> str:
         """
         파일명에서 날짜 추출
-        
-        Args:
-            filename: 파일명
-            
-        Returns:
-            str: YYYY-MM-DD 형식의 날짜
+        예: "250925_일간 수소 이슈 브리핑.pdf" -> "2025-09-25"
         """
         import re
-        from datetime import datetime
         
-        # YYMMDD 또는 YYYYMMDD 패턴 찾기
-        date_patterns = [
-            r'(\d{8})',  # YYYYMMDD
-            r'(\d{6})',  # YYMMDD
-            r'(\d{4})-(\d{2})-(\d{2})',  # YYYY-MM-DD
-            r'(\d{4})\.(\d{2})\.(\d{2})'  # YYYY.MM.DD
-        ]
+        # YYMMDD 형식 찾기
+        match = re.search(r'(\d{2})(\d{2})(\d{2})', filename)
         
-        for pattern in date_patterns:
-            match = re.search(pattern, filename)
-            if match:
-                try:
-                    if len(match.group(0)) == 8:  # YYYYMMDD
-                        date_str = match.group(0)
-                        return f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]}"
-                    elif len(match.group(0)) == 6:  # YYMMDD
-                        date_str = match.group(0)
-                        year = f"20{date_str[:2]}"
-                        return f"{year}-{date_str[2:4]}-{date_str[4:6]}"
-                    else:
-                        # 구분자가 있는 경우
-                        return match.group(0).replace('.', '-')
-                except:
-                    pass
+        if match:
+            yy, mm, dd = match.groups()
+            # 25 -> 2025로 변환
+            year = f"20{yy}"
+            return f"{year}-{mm}-{dd}"
         
-        # 날짜를 찾지 못한 경우 오늘 날짜 반환
-        return datetime.now().strftime('%Y-%m-%d')
+        return ""
 
 
 def main():
-    """메인 함수 - CLI 인자 처리"""
+    """메인 함수"""
     parser = argparse.ArgumentParser(
-        description='한국수소연합(H2HUB) 브리핑 자동화 시스템'
+        description="한국수소연합 브리핑 자동화 시스템"
     )
     
+    # 모드 선택
     parser.add_argument(
         '--pages',
         type=int,
-        default=3,
-        help='수집할 최대 페이지 수 (기본값: 3)'
-    )
-    
-    parser.add_argument(
-        '--no-upload',
-        action='store_true',
-        help='Notion 업로드 건너뛰기 (분석 결과만 출력)'
+        default=0,
+        help='웹에서 수집할 페이지 수 (기본: 0, 수집 안 함)'
     )
     
     parser.add_argument(
         '--existing-pdfs',
         type=str,
-        help='기존 PDF 디렉토리 경로 (웹 크롤링 없이 로컬 PDF만 처리)'
+        help='기존 PDF 디렉토리 경로 (예: ../pdf)'
+    )
+    
+    parser.add_argument(
+        '--no-upload',
+        action='store_true',
+        help='Notion 업로드 건너뛰기 (분석만)'
     )
     
     parser.add_argument(
@@ -271,22 +247,33 @@ def main():
         uploader.test_connection()
         return
     
-    # 자동화 시스템 실행
-    automation = H2HUBAutomation()
+    # 시스템 시작
+    logger.info("\n" + "="*70)
+    logger.info("한국수소연합 브리핑 자동화 시스템 시작")
+    logger.info("="*70)
     
-    # 기존 PDF 처리 모드
+    automation = H2HubAutomation()
+    
+    upload_to_notion = not args.no_upload
+    
+    # 기존 PDF 모드
     if args.existing_pdfs:
         pdf_dir = Path(args.existing_pdfs)
-        automation.run_with_existing_pdfs(
-            pdf_dir=pdf_dir,
-            upload_to_notion=not args.no_upload
-        )
-    # 일반 모드 (웹 크롤링 + 분석 + 업로드)
+        
+        if not pdf_dir.exists():
+            logger.error(f"❌ 디렉토리를 찾을 수 없습니다: {pdf_dir}")
+            sys.exit(1)
+        
+        automation.run_with_existing_pdfs(pdf_dir, upload_to_notion)
+    
+    # 웹 수집 모드
+    elif args.pages > 0:
+        automation.run_full_workflow(args.pages, upload_to_notion)
+    
     else:
-        automation.run(
-            max_pages=args.pages,
-            upload_to_notion=not args.no_upload
-        )
+        parser.print_help()
+        print("\n❌ --pages 또는 --existing-pdfs 옵션이 필요합니다.")
+        sys.exit(1)
 
 
 if __name__ == "__main__":
