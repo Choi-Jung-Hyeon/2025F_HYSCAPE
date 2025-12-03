@@ -22,7 +22,7 @@ from typing import List, Dict
 # 각 모듈 import
 from scrapers.base_scraper import BaseScraper
 from scrapers.k_startup_scraper import KStartupScraper
-from filters.keyword_filter import KeywordFilter
+from filters.keyword_filters import KeywordFilter  # ✅ 수정: keyword_filters (복수형)
 
 
 class GovernmentSupportTracker:
