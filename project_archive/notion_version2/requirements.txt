@@ -1,0 +1,19 @@
+# 한국수소연합(H2HUB) 브리핑 자동화 시스템
+# Python 3.8+ 필요
+
+# 웹 크롤링
+requests>=2.31.0
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# PDF 처리
+pdfplumber>=0.10.0
+
+# Google Gemini AI
+google-generativeai>=0.3.0
+
+# Notion API
+notion-client>=2.2.0
+
+# 유틸리티
+python-dateutil>=2.8.0
