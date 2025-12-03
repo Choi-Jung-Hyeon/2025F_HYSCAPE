@@ -5,11 +5,18 @@
     python main.py
 """
 
+import sys
+import os
+from pathlib import Path
+
+# 현재 디렉토리를 Python 경로에 추가
+current_dir = Path(__file__).parent
+sys.path.insert(0, str(current_dir))
+
 import yaml
 import logging
 import json
 from datetime import datetime
-from pathlib import Path
 from typing import List, Dict
 
 # 각 모듈 import
