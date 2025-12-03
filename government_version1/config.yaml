@@ -1,0 +1,100 @@
+# 정부 지원 사업 추천 시스템 설정 파일
+
+# 필터링 전략 정의
+filter_strategies:
+  type_a:  # 기술 중심 (IRIS용) - Strict filtering
+    name: "기술 중심 필터"
+    description: "핵심 기술 키워드가 반드시 포함되어야 함"
+    logic: "tech_keywords_required"
+    
+  type_b:  # 지원 중심 (K-Startup, Bizinfo용) - Flexible filtering
+    name: "지원 중심 필터"
+    description: "기술 키워드 OR (지원 키워드 AND 자격 키워드)"
+    logic: "tech_or_support_and_qualification"
+
+# 키워드 정의
+keywords:
+  # 핵심 기술 키워드 (Type A, Type B 모두 사용)
+  tech:
+    - "수소"
+    - "연료전지"
+    - "수전해"
+    - "재생에너지"
+    - "탄소중립"
+    - "기후테크"
+    - "수소생산"
+    - "그린수소"
+    - "청정에너지"
+    
+  # 지원/성장 키워드 (Type B 전용)
+  support:
+    - "마케팅"
+    - "마케팅 지원"
+    - "수출"
+    - "글로벌"
+    - "시장진출"
+    - "사업화"
+    - "시제품"
+    - "상용화"
+    - "해외진출"
+    
+  # 자격 요건 키워드 (Type B 전용)
+  qualification:
+    - "성남"
+    - "경기"
+    - "경기도"
+    - "3년 이내"
+    - "창업 3년"
+    - "초기창업"
+    - "벤처"
+    - "스타트업"
+
+# 크롤링 대상 사이트
+sites:
+  k_startup:
+    name: "K-Startup"
+    enabled: true
+    url: "https://www.k-startup.go.kr/web/contents/biznotify.do?schM=view"
+    filter_strategy: "type_b"  # 지원 중심 필터 사용
+    scraper_class: "KStartupScraper"
+    check_interval: "daily"
+    notes: "창업지원 사업 중심 - 기술+성장 지원 혼합"
+    
+  iris:
+    name: "IRIS (범부처통합연구지원)"
+    enabled: true
+    url: "https://www.iris.go.kr/index.do"
+    filter_strategy: "type_a"  # 기술 중심 필터 사용
+    scraper_class: "IRISScraper"
+    check_interval: "daily"
+    notes: "순수 R&D, 기술 개발 자금 중심"
+    
+  bizinfo:
+    name: "기업마당"
+    enabled: true
+    url: "https://www.bizinfo.go.kr/web/index.do"
+    filter_strategy: "type_b"  # 지원 중심 필터 사용
+    scraper_class: "BizinfoScraper"
+    check_interval: "daily"
+    notes: "K-Startup과 유사한 성격"
+
+# Slack 알림 설정
+slack:
+  enabled: true
+  webhook_url: "YOUR_SLACK_WEBHOOK_URL_HERE"
+  channel: "#정부지원사업"
+  mention_users: []  # 예: ["@중현", "@CEO"]
+
+# 시스템 설정
+system:
+  log_level: "INFO"
+  history_file: "data/scraped_history.json"
+  max_history_days: 90  # 90일 이상 된 히스토리는 자동 삭제
+  timezone: "Asia/Seoul"
+  
+# 회사 정보 (메타데이터)
+company:
+  name: "Hyscape"
+  industry: "수소·수전해"
+  founded_year: 2021
+  location: "경기도 성남시"
