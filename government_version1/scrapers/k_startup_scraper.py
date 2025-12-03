@@ -1,5 +1,5 @@
 """
-K-Startup 크롤러 구현체
+K-Startup 크롤러 구현체 (디버깅 모드 추가)
 https://www.k-startup.go.kr/ 사업공고 크롤링
 """
 
@@ -28,6 +28,9 @@ class KStartupScraper(BaseScraper):
         self.base_url = "https://www.k-startup.go.kr"
         self.list_url = f"{self.base_url}/web/contents/biznotify.do"
         self.max_pages = 3  # 최근 3페이지만 크롤링
+        
+        # 🐛 디버깅 모드 설정
+        self.debug_mode = True  # HTML 파일 저장 여부
         
     def fetch_announcements(self) -> List[Dict]:
         """
@@ -58,11 +61,17 @@ class KStartupScraper(BaseScraper):
                 )
                 response.raise_for_status()
                 
+                # 🐛 디버깅: HTML 파일로 저장
+                if self.debug_mode and page == 1:
+                    debug_file = f"debug_kstartup_page{page}.html"
+                    with open(debug_file, 'w', encoding='utf-8') as f:
+                        f.write(response.text)
+                    self.logger.info(f"🐛 디버그 HTML 저장: {debug_file}")
+                
                 # HTML 파싱
                 soup = BeautifulSoup(response.text, 'html.parser')
                 
-                # 공고 리스트 찾기 (실제 HTML 구조에 맞게 수정 필요)
-                # 예시: <div class="board-list"> 내부의 각 항목
+                # 공고 리스트 찾기
                 announcements = self._parse_list_page(soup)
                 all_announcements.extend(announcements)
                 
@@ -89,20 +98,38 @@ class KStartupScraper(BaseScraper):
         """
         announcements = []
         
-        # 실제 K-Startup HTML 구조에 맞게 수정 필요
-        # 아래는 일반적인 게시판 구조 예시
+        # 🔍 여러 가능한 HTML 구조 시도
+        selectors = [
+            'table.board-list tbody tr',           # 테이블 형식 1
+            'table tbody tr',                       # 테이블 형식 2
+            'div.board-list ul li',                 # 리스트 형식 1
+            'ul.notice-list li',                    # 리스트 형식 2
+            'div.list-wrap div.item',               # 카드 형식 1
+            'div.notice-item',                      # 카드 형식 2
+        ]
         
-        # 방법 1: 테이블 형식인 경우
-        rows = soup.select('table.board-list tbody tr')
+        rows = []
+        for selector in selectors:
+            rows = soup.select(selector)
+            if rows:
+                self.logger.info(f"✅ 매칭된 셀렉터: '{selector}' ({len(rows)}개 항목)")
+                break
         
-        # 방법 2: 리스트 형식인 경우
         if not rows:
-            rows = soup.select('div.board-list ul li')
+            self.logger.warning("⚠️ 공고 목록을 찾을 수 없습니다. HTML 구조 확인 필요")
+            # 🐛 디버깅: 페이지 구조 출력
+            self._debug_html_structure(soup)
+            return []
         
         for row in rows:
             try:
-                # 제목과 URL 추출
-                title_elem = row.select_one('a')
+                # 제목과 URL 추출 (여러 셀렉터 시도)
+                title_elem = (
+                    row.select_one('a') or 
+                    row.select_one('.title a') or 
+                    row.select_one('td a')
+                )
+                
                 if not title_elem:
                     continue
                 
@@ -113,7 +140,7 @@ class KStartupScraper(BaseScraper):
                 if url and not url.startswith('http'):
                     url = self.base_url + url
                 
-                # 마감일 추출 (예: "2024-12-31")
+                # 마감일 추출
                 deadline = self._extract_deadline(row)
                 
                 # 주관기관 추출
@@ -124,7 +151,7 @@ class KStartupScraper(BaseScraper):
                     'url': url,
                     'deadline': deadline,
                     'organization': organization,
-                    'raw_html': str(row),  # 추가 파싱이 필요할 수 있음
+                    'raw_html': str(row)[:500],  # 처음 500자만 저장
                 })
                 
             except Exception as e:
@@ -132,6 +159,37 @@ class KStartupScraper(BaseScraper):
                 continue
         
         return announcements
+    
+    def _debug_html_structure(self, soup: BeautifulSoup):
+        """
+        HTML 구조 디버깅 정보 출력
+        
+        Args:
+            soup: BeautifulSoup 객체
+        """
+        self.logger.info("=" * 60)
+        self.logger.info("🐛 HTML 구조 디버깅")
+        self.logger.info("=" * 60)
+        
+        # 주요 태그 개수 확인
+        tags_to_check = ['table', 'ul', 'div.list', 'div.board', 'article', 'section']
+        for tag in tags_to_check:
+            count = len(soup.select(tag))
+            if count > 0:
+                self.logger.info(f"  {tag}: {count}개")
+        
+        # 링크 개수 확인
+        links = soup.find_all('a', href=True)
+        self.logger.info(f"  전체 링크(<a>): {len(links)}개")
+        
+        # 첫 번째 링크 샘플
+        if links:
+            sample = links[0]
+            self.logger.info(f"  링크 샘플: {sample.get_text(strip=True)[:50]}")
+        
+        self.logger.info("=" * 60)
+        self.logger.info("💡 debug_kstartup_page1.html 파일을 열어서 구조를 확인하세요!")
+        self.logger.info("=" * 60)
     
     def _extract_deadline(self, element) -> str:
         """
@@ -143,8 +201,18 @@ class KStartupScraper(BaseScraper):
         Returns:
             str: YYYY-MM-DD 형식 날짜
         """
-        # 예: <span class="date">2024-12-31</span>
-        date_elem = element.select_one('.date, .deadline, td:nth-child(4)')
+        # 여러 가능한 셀렉터 시도
+        selectors = [
+            '.date', '.deadline', '.period', '.end-date',
+            'td:nth-child(4)', 'td:nth-child(5)',
+            'span.date', 'div.date'
+        ]
+        
+        date_elem = None
+        for selector in selectors:
+            date_elem = element.select_one(selector)
+            if date_elem:
+                break
         
         if date_elem:
             date_text = date_elem.get_text(strip=True)
@@ -166,8 +234,18 @@ class KStartupScraper(BaseScraper):
         Returns:
             str: 기관명
         """
-        # 예: <span class="organ">중소벤처기업부</span>
-        org_elem = element.select_one('.organ, .organization, td:nth-child(3)')
+        # 여러 가능한 셀렉터 시도
+        selectors = [
+            '.organ', '.organization', '.agency', '.dept',
+            'td:nth-child(2)', 'td:nth-child(3)',
+            'span.organ', 'div.organ'
+        ]
+        
+        org_elem = None
+        for selector in selectors:
+            org_elem = element.select_one(selector)
+            if org_elem:
+                break
         
         if org_elem:
             return org_elem.get_text(strip=True)
@@ -193,7 +271,7 @@ class KStartupScraper(BaseScraper):
                 'url': raw_data['url'],
                 'deadline': raw_data['deadline'],
                 'organization': raw_data['organization'],
-                'description': description or raw_data['title'],  # 상세 정보 없으면 제목 사용
+                'description': description or raw_data['title'],
                 'tags': self._extract_tags(raw_data['title'], description),
                 'scraped_at': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
             }
@@ -224,8 +302,18 @@ class KStartupScraper(BaseScraper):
             
             soup = BeautifulSoup(response.text, 'html.parser')
             
-            # 본문 내용 추출 (실제 구조에 맞게 수정)
-            content = soup.select_one('.content, .view-content, #content')
+            # 본문 내용 추출 (여러 셀렉터 시도)
+            selectors = [
+                '.content', '.view-content', '#content',
+                '.article-content', '.detail-content',
+                'div.cont', 'div.view'
+            ]
+            
+            content = None
+            for selector in selectors:
+                content = soup.select_one(selector)
+                if content:
+                    break
             
             if content:
                 # HTML 태그 제거하고 텍스트만 추출
@@ -291,7 +379,7 @@ if __name__ == '__main__':
     results = scraper.scrape()
     
     print(f"\n=== 크롤링 결과: {len(results)}개 공고 ===")
-    for i, announcement in enumerate(results[:3], 1):  # 처음 3개만 출력
+    for i, announcement in enumerate(results[:3], 1):
         print(f"\n{i}. {announcement['title']}")
         print(f"   마감일: {announcement['deadline']}")
         print(f"   URL: {announcement['url']}")

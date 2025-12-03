@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+
+# 설정 파일 (민감한 정보 포함)
+config.py
+
+# 다운로드된 파일
+downloads/
+*.pdf
+
+# 로그 파일
+*.log
+logs/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# 테스트 파일
+test_*.py
+debug_*.html
