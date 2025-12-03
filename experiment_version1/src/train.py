@@ -11,7 +11,7 @@ from sklearn.metrics import mean_squared_error, r2_score
 # ==========================================
 # 현재 파일(train.py)의 위치를 기준으로 경로를 잡습니다.
 current_dir = os.path.dirname(os.path.abspath(__file__))
-data_path = os.path.join(current_dir, '..', 'data', 'data1.xlsx - Sheet1.csv')
+data_path = os.path.join(current_dir, '..', 'data', 'Sheet1.csv')
 model_save_path = os.path.join(current_dir, '..', 'models')
 
 # 모델 저장 폴더가 없으면 생성
