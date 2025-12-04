@@ -19,7 +19,7 @@ os.makedirs(model_save_path, exist_ok=True)
 
 print(f"Loading data from: {data_path}")
 try:
-    df = pd.read_csv(data_path)
+    df = pd.read_csv(data_path, encoding='euc-kr')
 except FileNotFoundError:
     print("❌ 에러: 데이터 파일을 찾을 수 없습니다. 경로를 확인해주세요.")
     exit()
