@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""한국수소연합(H2HUB) PDF 브리핑 수집 모듈"""
+"""PDF 브리핑 분석 모듈"""
 
 import logging
-import time
+import json
 import re
 from pathlib import Path
-from typing import List, Dict, Optional
-from urllib.parse import urljoin
+from typing import Dict, Optional
 
-import requests
-from bs4 import BeautifulSoup
+import pdfplumber
+import google.generativeai as genai
 
 import config
 
@@ -21,184 +20,181 @@ logging.basicConfig(
 logger = logging.getLogger(__name__)
 
 
-class H2HUBBriefingCollector:
-    """H2HUB 브리핑 수집 클래스"""
+class BriefingAnalyzer:
+    """PDF 브리핑 분석 클래스"""
     
     def __init__(self):
-        self.session = requests.Session()
-        self.session.headers.update(config.DEFAULT_HEADERS)
-        self.download_dir = config.DOWNLOADS_DIR
-        logger.info("H2HUB Collector 초기화 완료")
+        genai.configure(api_key=config.GOOGLE_API_KEY)
+        self.model = genai.GenerativeModel(config.GEMINI_MODEL)
+        logger.info(f"BriefingAnalyzer 초기화 (모델: {config.GEMINI_MODEL})")
     
-    def collect_briefings(self, max_pages: int = 3) -> List[Dict]:
-        """브리핑 PDF 수집"""
-        logger.info("=" * 70)
-        logger.info("한국수소연합 브리핑 수집 시작")
-        logger.info("=" * 70)
+    def analyze_briefing(self, pdf_path: str) -> Optional[Dict]:
+        """PDF 브리핑 파일 분석"""
+        logger.info(f"\n📊 분석 시작: {Path(pdf_path).name}")
         
-        collected = []
+        text = self._extract_text_from_pdf(pdf_path)
         
-        for page_num in range(1, max_pages + 1):
-            logger.info(f"\n📄 {page_num}페이지 수집 중...")
-            
-            offset = (page_num - 1) * 10
-            articles = self._fetch_article_list(offset)
-            
-            if not articles:
-                logger.warning(f"{page_num}페이지에서 게시글 없음")
-                break
-            
-            logger.info(f"  ➜ {len(articles)}개 게시글 발견")
-            
-            for article in articles:
-                result = self._process_article(article)
-                if result:
-                    collected.append(result)
-                    time.sleep(1)
+        if not text or len(text.strip()) < 100:
+            logger.warning(f"  ⚠️ 텍스트가 너무 짧습니다 ({len(text)} 자)")
+            return None
         
-        logger.info(f"\n✅ 수집 완료: {len(collected)}개")
-        return collected
+        logger.info(f"  ✅ 텍스트 추출 완료 ({len(text)} 자)")
+        
+        # 텍스트 길이에 따라 전략 선택
+        analysis = self._analyze_with_gemini(text[:10000])
+        
+        if not analysis:
+            # 재시도: 더 짧은 텍스트
+            logger.info("  🔄 짧은 텍스트로 재시도...")
+            analysis = self._analyze_with_gemini(text[:5000])
+        
+        if analysis:
+            logger.info(f"  ✅ 분석 완료")
+            logger.info(f"     감성: {analysis['sentiment']}")
+            logger.info(f"     카테고리: {analysis.get('category', 'N/A')}")
+            logger.info(f"     키워드: {', '.join(analysis.get('keywords', []))}")
+        
+        return analysis
     
-    def _fetch_article_list(self, offset: int = 0) -> List[Dict]:
-        """게시판 목록 페이지에서 게시글 정보 추출"""
+    def _extract_text_from_pdf(self, pdf_path: str) -> str:
+        """PDF 텍스트 추출"""
         try:
-            url = f"{config.H2HUB_PERIODICALS_URL}?mode=list&article.offset={offset}&articleLimit=10"
-            response = self.session.get(url, timeout=10)
-            response.raise_for_status()
+            text_parts = []
+            with pdfplumber.open(pdf_path) as pdf:
+                for page in pdf.pages:
+                    page_text = page.extract_text()
+                    if page_text:
+                        text_parts.append(page_text)
             
-            soup = BeautifulSoup(response.content, 'html.parser')
-            articles = []
+            full_text = "\n\n".join(text_parts)
+            full_text = re.sub(r'\n{3,}', '\n\n', full_text)
+            full_text = re.sub(r' {2,}', ' ', full_text)
             
-            for td in soup.find_all('td', class_='b-td-left'):
-                title_box = td.find('div', class_='b-title-box')
-                if not title_box:
-                    continue
-                
-                link = title_box.find('a')
-                title_span = title_box.find('span', class_='b-title')
-                date_span = title_box.find('span', class_='b-date')
-                
-                if not (link and title_span):
-                    continue
-                
-                title = title_span.get_text(strip=True)
-                href = link.get('href', '')
-                date = date_span.get_text(strip=True) if date_span else ''
-                
-                # "브리핑" 키워드 필터링
-                if not any(keyword in title for keyword in config.BRIEFING_KEYWORDS):
-                    continue
-                
-                detail_url = urljoin(config.H2HUB_BASE_URL, href)
-                articles.append({
-                    'title': title,
-                    'date': date,
-                    'detail_url': detail_url
-                })
-            
-            return articles
+            return full_text.strip()
         except Exception as e:
-            logger.error(f"  ❌ 페이지 요청 실패: {e}")
-            return []
+            logger.error(f"  ❌ PDF 텍스트 추출 실패: {e}")
+            return ""
     
-    def _process_article(self, article: Dict) -> Optional[Dict]:
-        """개별 게시글 처리 (PDF 다운로드)"""
-        title = article['title']
-        date = article['date']
-        detail_url = article['detail_url']
-        
-        logger.info(f"\n  📎 처리 중: {title}")
-        
+    def _analyze_with_gemini(self, text: str) -> Optional[Dict]:
+        """Gemini API로 텍스트 분석"""
         try:
-            response = self.session.get(detail_url, timeout=10)
-            response.raise_for_status()
+            prompt = config.ANALYSIS_PROMPT.format(content=text)
             
-            soup = BeautifulSoup(response.content, 'html.parser')
-            pdf_url = self._find_pdf_link(soup)
-            
-            if not pdf_url:
-                logger.warning("    ⚠️ PDF 링크 없음")
-                return None
-            
-            pdf_path = self._download_pdf(pdf_url, title, date)
-            
-            if not pdf_path:
-                return None
-            
-            logger.info(f"    ✅ 다운로드 완료: {Path(pdf_path).name}")
-            
-            return {
-                'title': title,
-                'date': date,
-                'pdf_path': pdf_path,
-                'url': detail_url
+            safety_settings = {
+                genai.types.HarmCategory.HARM_CATEGORY_HATE_SPEECH: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                genai.types.HarmCategory.HARM_CATEGORY_HARASSMENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                genai.types.HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: genai.types.HarmBlockThreshold.BLOCK_NONE,
+                genai.types.HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: genai.types.HarmBlockThreshold.BLOCK_NONE,
             }
+            
+            response = self.model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    temperature=0.3,
+                    max_output_tokens=800
+                ),
+                safety_settings=safety_settings
+            )
+            
+            if not response.candidates or response.candidates[0].finish_reason != 1:
+                return None
+            
+            # JSON 파싱
+            result_text = response.text.strip()
+            json_text = self._extract_json(result_text)
+            analysis = json.loads(json_text)
+            
+            if self._validate_analysis(analysis):
+                return analysis
+            
+            return None
         except Exception as e:
-            logger.error(f"    ❌ 처리 실패: {e}")
+            logger.warning(f"  ⚠️ 분석 실패: {e}")
             return None
     
-    def _find_pdf_link(self, soup: BeautifulSoup) -> Optional[str]:
-        """상세 페이지에서 PDF 링크 찾기"""
-        # .pdf 확장자 링크 찾기
-        for link in soup.find_all('a', href=True):
-            href = link.get('href', '')
-            if href.endswith('.pdf') or '.pdf' in href.lower():
-                return urljoin(config.H2HUB_BASE_URL, href)
+    def _extract_json(self, text: str) -> str:
+        """텍스트에서 JSON 추출"""
+        text = re.sub(r'```json\s*', '', text, flags=re.IGNORECASE)
+        text = re.sub(r'```\s*', '', text)
         
-        # "바로보기" 버튼 찾기
-        for link in soup.find_all('a'):
-            link_text = link.get_text(strip=True)
-            if any(keyword in link_text for keyword in ['바로보기', '다운로드', 'PDF']):
-                href = link.get('href', '')
-                if href:
-                    return urljoin(config.H2HUB_BASE_URL, href)
+        start = text.find('{')
+        if start == -1:
+            return text.strip()
         
-        return None
+        count = 0
+        end = start
+        for i in range(start, len(text)):
+            if text[i] == '{':
+                count += 1
+            elif text[i] == '}':
+                count -= 1
+                if count == 0:
+                    end = i + 1
+                    break
+        
+        return text[start:end].strip() if end > start else text.strip()
     
-    def _download_pdf(self, pdf_url: str, title: str, date: str) -> Optional[str]:
-        """PDF 파일 다운로드"""
-        try:
-            # 안전한 파일명 생성
-            safe_title = re.sub(r'[^\w\s-]', '', title)
-            safe_title = re.sub(r'[-\s]+', '_', safe_title)
-            
-            # 날짜 포맷팅
-            if date and len(date) >= 10:
-                date_str = date.replace('-', '').replace('.', '')[2:8]
+    def _validate_analysis(self, analysis: Dict) -> bool:
+        """분석 결과 검증 및 자동 보정"""
+        required_keys = ['summary', 'sentiment', 'category', 'keywords']
+        
+        for key in required_keys:
+            if key not in analysis:
+                logger.warning(f"  필수 키 누락: {key}")
+                return False
+        
+        # summary 검증
+        if not isinstance(analysis['summary'], str) or len(analysis['summary']) < 10:
+            return False
+        
+        # sentiment 자동 보정
+        valid_sentiments = ['Positive', 'Negative', 'Neutral']
+        if analysis['sentiment'] not in valid_sentiments:
+            sentiment_lower = str(analysis['sentiment']).lower()
+            if 'positive' in sentiment_lower or '긍정' in sentiment_lower:
+                analysis['sentiment'] = 'Positive'
+            elif 'negative' in sentiment_lower or '부정' in sentiment_lower:
+                analysis['sentiment'] = 'Negative'
             else:
-                date_str = time.strftime('%y%m%d')
-            
-            filename = f"{date_str}_{safe_title}.pdf"
-            filepath = self.download_dir / filename
-            
-            # 이미 존재하면 스킵
-            if filepath.exists():
-                logger.info(f"    ℹ️ 이미 존재: {filename}")
-                return str(filepath)
-            
-            # PDF 다운로드
-            response = self.session.get(pdf_url, timeout=30, stream=True)
-            response.raise_for_status()
-            
-            with open(filepath, 'wb') as f:
-                for chunk in response.iter_content(chunk_size=8192):
-                    f.write(chunk)
-            
-            return str(filepath)
-        except Exception as e:
-            logger.error(f"    ❌ 다운로드 실패: {e}")
-            return None
+                analysis['sentiment'] = 'Neutral'
+        
+        # category 자동 보정
+        valid_categories = ['기관', '정책', '지자체', '산업계', '연구계', '해외']
+        if analysis['category'] not in valid_categories:
+            analysis['category'] = '기관'
+        
+        # keywords 자동 보정
+        if not isinstance(analysis['keywords'], list):
+            if isinstance(analysis['keywords'], str):
+                analysis['keywords'] = [kw.strip() for kw in analysis['keywords'].split(',')]
+            else:
+                analysis['keywords'] = []
+        
+        # 최대 5개로 제한
+        analysis['keywords'] = [kw for kw in analysis['keywords'] if kw.strip()][:5]
+        
+        return True
 
 
 def main():
     """테스트용"""
-    collector = H2HUBBriefingCollector()
-    results = collector.collect_briefings(max_pages=2)
+    sample_pdf = Path("/mnt/project/250925_일간_수소_이슈_브리핑.pdf")
     
-    print(f"\n수집 완료: {len(results)}개")
-    for result in results:
-        print(f"\n제목: {result['title']}")
-        print(f"파일: {result['pdf_path']}")
+    if not sample_pdf.exists():
+        print(f"❌ 파일 없음: {sample_pdf}")
+        return
+    
+    analyzer = BriefingAnalyzer()
+    result = analyzer.analyze_briefing(str(sample_pdf))
+    
+    if result:
+        print("\n분석 결과:")
+        print(f"감성: {result['sentiment']}")
+        print(f"카테고리: {result['category']}")
+        print(f"키워드: {', '.join(result['keywords'])}")
+        print(f"\n요약:\n{result['summary']}")
+    else:
+        print("\n❌ 분석 실패")
 
 
 if __name__ == "__main__":
