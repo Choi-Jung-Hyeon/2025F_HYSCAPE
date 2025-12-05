@@ -1,8 +1,6 @@
-# content_scraper.py (v3.0)
+# content_scraper.py
 """
 기사 본문 추출 모듈
-- 다양한 사이트 지원
-- 월간수소경제 전용 파서 추가
 """
 
 import requests
@@ -10,9 +8,7 @@ from bs4 import BeautifulSoup
 import time
 
 def get_and_clean_article_content(url, source_name=""):
-    """
-    URL에서 기사 본문 추출 및 정제
-    """
+    """URL에서 기사 본문 추출 및 정제"""
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
     }
