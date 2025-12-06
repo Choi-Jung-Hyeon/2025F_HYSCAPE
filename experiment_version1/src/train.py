@@ -25,25 +25,29 @@ except FileNotFoundError:
     exit()
 
 # ==========================================
-# 2. 데이터 전처리
+# 2. 데이터 전처리 (수정됨: 더 강력한 청소 기능 추가)
 # ==========================================
-# 학습에 사용할 변수(X)와 예측할 변수(y) 정의
-# 데이터 파일의 실제 컬럼명과 정확히 일치해야 합니다.
 features = [
     'Current Density(A/㎠)',      # 전류 밀도
     'Cell Temp(Deg C)',           # 셀 온도
     'Anode Inlet Pressure(kpa)',  # 양극 입구 압력
     'Liquide Flow(ccm)'           # 유량
 ]
-target = 'Cell Voltage(V)'        # 예측 목표: 전압
+target = 'Cell Voltage(V)'        # 예측 목표
 
-# 필요한 컬럼만 선택하고, 빈 값(NaN)이 있는 행은 제거
-data = df[features + [target]].dropna()
+# [핵심 수정] 모든 데이터를 강제로 숫자로 변환합니다.
+# 'Current Density(A/㎠)' 같은 글자가 섞여 있으면 NaN(빈 값)으로 바꿔버립니다.
+all_cols = features + [target]
+for col in all_cols:
+    df[col] = pd.to_numeric(df[col], errors='coerce')
+
+# NaN(빈 값)이 된 행(원래 글자가 있던 행)을 삭제합니다.
+data = df[all_cols].dropna()
+
+print(f"데이터 정제 완료! (남은 데이터: {len(data)}행)")
 
 X = data[features]
 y = data[target]
-
-print(f"학습 데이터 크기: {X.shape}")
 
 # 학습용:테스트용 = 8:2 분리
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -80,3 +84,27 @@ plt.ylabel('Predicted Voltage (V)')
 plt.title(f'Prediction Performance (R2: {r2:.2f})')
 plt.savefig(os.path.join(model_save_path, 'performance_graph.png'))
 print("📈 성능 그래프가 models 폴더에 저장되었습니다.")
+
+# [추가 코드] 변수 중요도(Feature Importance) 분석
+import numpy as np
+
+# 모델이 생각하는 각 변수의 중요도 뽑기
+importances = model.feature_importances_
+feature_names = X.columns
+
+# 중요도 순서대로 정렬
+indices = np.argsort(importances)[::-1]
+
+print("\n📊 [변수 중요도 분석 결과]")
+print("이 모델은 전압을 예측할 때 다음 변수를 가장 중요하게 봅니다:")
+for f in range(X.shape[1]):
+    print(f"{f + 1}. {feature_names[indices[f]]}: {importances[indices[f]]:.4f}")
+
+# 중요도 그래프 저장
+plt.figure(figsize=(10, 6))
+plt.title("Feature Importances (What affects Voltage?)")
+plt.bar(range(X.shape[1]), importances[indices], align="center")
+plt.xticks(range(X.shape[1]), [feature_names[i] for i in indices], rotation=45)
+plt.tight_layout()
+plt.savefig(os.path.join(model_save_path, 'feature_importance.png'))
+print("📊 변수 중요도 그래프가 models 폴더에 저장되었습니다.")
