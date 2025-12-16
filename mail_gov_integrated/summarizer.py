@@ -17,7 +17,7 @@ from config import (
 genai.configure(api_key=GOOGLE_API_KEY)
 logger = logging.getLogger(__name__)
 
-def get_summary_and_keywords(content, article_title, max_retries=3):
+def get_summary_and_keywords(content, article_title, max_retries=2):
     """Gemini API로 기사 요약 (재시도 로직 포함)"""
     prompt = SUMMARY_PROMPT_TEMPLATE.format(
         title=article_title,
@@ -46,8 +46,8 @@ def get_summary_and_keywords(content, article_title, max_retries=3):
             # API 할당량 초과 (429 에러)
             if '429' in error_str or 'quota' in error_str.lower():
                 if attempt < max_retries - 1:
-                    wait_time = 60  # 1분 대기
-                    logger.warning(f"API 할당량 초과, {wait_time}초 대기 후 재시도... ({attempt + 1}/{max_retries})")
+                    wait_time = 30  # 30초 대기 (1분 → 30초로 단축)
+                    logger.warning(f"API 할당량 초과, {wait_time}초 대기 후 1회 재시도... ({attempt + 1}/{max_retries})")
                     time.sleep(wait_time)
                     continue
                 else:
