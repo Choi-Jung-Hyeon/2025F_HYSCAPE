@@ -23,10 +23,11 @@ class KStartupScraper(BaseScraper):
     
     def __init__(self, config: Dict):
         super().__init__(config, site_name='k_startup')
-        
+
         # K-Startup 특화 설정
         self.base_url = "https://www.k-startup.go.kr"
-        self.list_url = f"{self.base_url}/web/contents/biznotify.do"
+        self.list_url = f"{self.base_url}/web/contents/bizpbanc-ongoing.do"  # 모집중인 공고
+        self.detail_url_template = f"{self.base_url}/web/contents/bizpbanc-ongoing-detail.do?schPbanc={{id}}"
         self.max_pages = 3  # 최근 3페이지만 크롤링
         
         # 🐛 디버깅 모드 설정
@@ -45,12 +46,10 @@ class KStartupScraper(BaseScraper):
             self.logger.info(f"페이지 {page}/{self.max_pages} 크롤링 중...")
             
             try:
-                # 페이지 요청
+                # 페이지 요청 (bizpbanc-ongoing.do는 GET 파라미터 없이 동작)
                 params = {
-                    'schM': 'list',
                     'page': page,
-                    'schBzType': '',  # 사업 유형 (전체)
-                    'schStts': 'R',   # 모집중(R) / 마감(D)
+                    'pbancClssCd': 'PBC020'  # 진행중인 공고
                 }
                 
                 response = requests.get(
@@ -100,6 +99,7 @@ class KStartupScraper(BaseScraper):
         
         # 🔍 여러 가능한 HTML 구조 시도
         selectors = [
+            'li.notice',                            # K-Startup 공고 리스트 (실제 구조)
             'table.board-list tbody tr',           # 테이블 형식 1
             'table tbody tr',                       # 테이블 형식 2
             'div.board-list ul li',                 # 리스트 형식 1
@@ -123,22 +123,41 @@ class KStartupScraper(BaseScraper):
         
         for row in rows:
             try:
-                # 제목과 URL 추출 (여러 셀렉터 시도)
-                title_elem = (
-                    row.select_one('a') or 
-                    row.select_one('.title a') or 
-                    row.select_one('td a')
-                )
-                
+                # K-Startup 전용: p.tit에서 제목 추출
+                title_elem = row.select_one('p.tit')
+                if not title_elem:
+                    # 대체 셀렉터 시도
+                    title_elem = (
+                        row.select_one('a') or
+                        row.select_one('.title a') or
+                        row.select_one('td a')
+                    )
+
                 if not title_elem:
                     continue
-                
+
                 title = title_elem.get_text(strip=True)
-                
-                # 상대 URL을 절대 URL로 변환
-                url = title_elem.get('href', '')
-                if url and not url.startswith('http'):
-                    url = self.base_url + url
+
+                # K-Startup 전용: javascript:go_view(ID) 형태에서 ID 추출
+                link_elem = row.select_one('a[href*="go_view"]')
+                if link_elem:
+                    href = link_elem.get('href', '')
+                    # javascript:go_view(175755) → 175755 추출
+                    match = re.search(r'go_view\((\d+)\)', href)
+                    if match:
+                        notice_id = match.group(1)
+                        url = self.detail_url_template.format(id=notice_id)
+                    else:
+                        url = ''
+                else:
+                    # 일반 링크 처리
+                    link_elem = row.select_one('a')
+                    if link_elem:
+                        url = link_elem.get('href', '')
+                        if url and not url.startswith('http'):
+                            url = self.base_url + url
+                    else:
+                        url = ''
                 
                 # 마감일 추출
                 deadline = self._extract_deadline(row)
@@ -194,62 +213,53 @@ class KStartupScraper(BaseScraper):
     def _extract_deadline(self, element) -> str:
         """
         마감일 추출 및 표준화
-        
+
         Args:
             element: HTML 요소
-            
+
         Returns:
             str: YYYY-MM-DD 형식 날짜
         """
-        # 여러 가능한 셀렉터 시도
-        selectors = [
-            '.date', '.deadline', '.period', '.end-date',
-            'td:nth-child(4)', 'td:nth-child(5)',
-            'span.date', 'div.date'
-        ]
-        
-        date_elem = None
-        for selector in selectors:
-            date_elem = element.select_one(selector)
-            if date_elem:
-                break
-        
-        if date_elem:
-            date_text = date_elem.get_text(strip=True)
-            
-            # 날짜 패턴 추출 (YYYY-MM-DD 또는 YYYY.MM.DD)
-            match = re.search(r'(\d{4})[-.](\d{2})[-.](\d{2})', date_text)
-            if match:
-                return f"{match.group(1)}-{match.group(2)}-{match.group(3)}"
-        
+        # K-Startup 전용: div.bottom span.list에서 마감일자 찾기
+        bottom_div = element.select_one('div.bottom')
+        if bottom_div:
+            info_spans = bottom_div.find_all('span', class_='list')
+            for span in info_spans:
+                text = span.get_text(strip=True)
+                if '마감일자' in text:
+                    # "마감일자2025-01-15" 형태에서 날짜 추출
+                    match = re.search(r'(\d{4})[-.]?(\d{2})[-.]?(\d{2})', text)
+                    if match:
+                        return f"{match.group(1)}-{match.group(2)}-{match.group(3)}"
+
+        # D-day 정보 추출 (대체)
+        dday_elem = element.select_one('span.day')
+        if dday_elem:
+            return dday_elem.get_text(strip=True)  # "D-7" 같은 형태
+
         return "미정"
     
     def _extract_organization(self, element) -> str:
         """
         주관기관 추출
-        
+
         Args:
             element: HTML 요소
-            
+
         Returns:
             str: 기관명
         """
-        # 여러 가능한 셀렉터 시도
-        selectors = [
-            '.organ', '.organization', '.agency', '.dept',
-            'td:nth-child(2)', 'td:nth-child(3)',
-            'span.organ', 'div.organ'
-        ]
-        
-        org_elem = None
-        for selector in selectors:
-            org_elem = element.select_one(selector)
-            if org_elem:
-                break
-        
-        if org_elem:
-            return org_elem.get_text(strip=True)
-        
+        # K-Startup 전용: div.bottom span.list에서 기관명 찾기
+        bottom_div = element.select_one('div.bottom')
+        if bottom_div:
+            info_spans = bottom_div.find_all('span', class_='list')
+            for span in info_spans:
+                text = span.get_text(strip=True)
+                # 등록일자, 마감일자, 조회 정보가 아닌 것이 기관명
+                if all(keyword not in text for keyword in ['등록일자', '시작일자', '마감일자', '조회']):
+                    if len(text) > 1:  # 1글자 이상
+                        return text
+
         return "미확인"
     
     def parse_announcement(self, raw_data: Dict) -> Optional[Dict]:

@@ -98,14 +98,14 @@ class GovSupportManager:
     def get_recommended_notices(
         self,
         top_n: int = 5,
-        min_score: int = 30
+        min_score: int = 10  # 30 → 10으로 완화
     ) -> List[Dict]:
         """
         추천 공고 수집 및 필터링
 
         Args:
             top_n: 반환할 최대 개수
-            min_score: 최소 관련도 점수
+            min_score: 최소 관련도 점수 (기본값 10)
 
         Returns:
             List[Dict]: 추천 공고 리스트 (관련도 순 정렬)
@@ -117,9 +117,10 @@ class GovSupportManager:
             self.logger.warning("수집된 공고가 없습니다.")
             return []
 
-        # 2. 필터링 및 점수 계산
+        # 2. 필터링 및 점수 계산 (Type B: 유연한 필터링)
         recommended = self.filter_strategy.filter_notices(
             notices=all_notices,
+            filter_type='B',
             min_score=min_score,
             top_n=top_n
         )

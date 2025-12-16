@@ -35,9 +35,9 @@ gtag('config', 'UA-71469923-1');
 		
 		
 	
-	<title></title>
-	<meta name="Keywords" content="">
-	<meta name="Description" content="">
+	<title>K-Startup 창업지원포털>사업공고>모집중</title>
+	<meta name="Keywords" content="K-Startup 창업지원포털>사업공고>모집중">
+	<meta name="Description" content="K-Startup 창업지원포털>사업공고>모집중">
 	<!-- <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/> -->
 	<meta http-equiv="X-UA-Compatible" content="IE=Edge"/>
 	<meta name="robots" content="noindex,nofollow">
@@ -47,8 +47,8 @@ gtag('config', 'UA-71469923-1');
 	<meta name="format-detection" content="telephone=no,address=no,email=no" />
 
 
-	<meta property="og:title" content=""/>
-	<meta property="og:description" content=""/>
+	<meta property="og:title" content="&gt;K-Startup 창업지원포털&gt;사업공고&gt;모집중"/>
+	<meta property="og:description" content="&gt;K-Startup 창업지원포털&gt;사업공고&gt;모집중"/>
 	<meta property="og:image" content="https://www.k-startup.go.kr/images/main_kstartup.jpg"/>
 	<meta property="og:type" content="website" />
 	<meta property="og:site_name" content="k-startup"/>
@@ -1561,7 +1561,7 @@ gtag('config', 'UA-71469923-1');
             <ol class="path_list">
 		               <li class="path_item n1">
 		                  <button type="button" class="path_button" id="tabMenuBtn1">
-		                     </button>
+		                     사업공고</button>
 		                  <!--현재 페이지의 1차메뉴명-->
 		                  <div class="path_panel basic">
 		                           <ul class="basic_list">
@@ -1589,18 +1589,15 @@ gtag('config', 'UA-71469923-1');
 		                        </div>
 		                     </li>
 		               <li class="path_item n2">
-		                        <button type="button" class="path_button" id="tabMenuBtn2"></button>
+		                        <button type="button" class="path_button" id="tabMenuBtn2">모집중</button>
 		                        <!--현재 페이지의 2차메뉴명-->
 		                        <div class="path_panel basic">
 		                           <ul class="basic_list" id="tabMenuUl2">
 		                              <li class="basic_item">
-		                                                      <a class="basic_anchor" href="/web/contents/web.do" title="K-Startup 창업지원포털">K-Startup 창업지원포털</a>
+		                                                      <a class="basic_anchor" href="/web/contents/bizpbanc-ongoing.do" title="모집중">모집중</a>
 		                                                   </li>
 		                                                <li class="basic_item">
-		                                                      <a class="basic_anchor" href="/web/contents/eng.do" title="K-Startup">K-Startup</a>
-		                                                   </li>
-		                                                <li class="basic_item">
-		                                                      <a class="basic_anchor" href="/web/contents/onestop.do" title="스타트업 원스톱 지원센터">스타트업 원스톱 지원센터</a>
+		                                                      <a class="basic_anchor" href="/web/contents/bizpbanc-deadline.do" title="모집마감">모집마감</a>
 		                                                   </li>
 		                                                </ul>
 		                        </div>
@@ -1629,7 +1626,9 @@ gtag('config', 'UA-71469923-1');
 		<div class="sub_titWrap">
 				<div class="tit_area">
 					<h2>
-						</h2>
+						모집중</h2>
+					<div class="tit2">
+							예비 창업자와 창업기업을 위한 창업지원사업공고를 확인하실 수 있습니다.</div>
 					</div>
 				<div class="social">
 					<div class="social_inner">
@@ -1671,7 +1670,1746 @@ gtag('config', 'UA-71469923-1');
 			<div class="content_wrap">
 				<div class="content">
 		<div id="contentViewHtml">
+		<script>
+	var gvdpData = {};
+	var gvdpSelFn = "";
+	var instData = {};
+	var instSelFn = "";
+	
+	$(document).ready(function(){
+		let bizEnyyCdList = $("input[name='bizEnyyCdList']");
+		let urlSearchParams = new URLSearchParams(location.search);
+		let bizEnyyCdListCsv = urlSearchParams.get("bizEnyyCdList") != null ? urlSearchParams.get("bizEnyyCdList").split(",") : "";
+		
+		gvdpData = {
+			scrollObj : $("#selGvdpScroll"),
+			startNum : 1,
+			endNum : 60,
+			setStatePos : "N", //U 위쪽으로 D 아래쪽으로 N 실행안함
+			total : 0,
+			state : 0,
+			oldScrollHeight : 0,
+			startLoadNum : 0,
+			endLoadNum : 0,
+			keyWord : "",
+			limitLength : 60,
+			batchSize : 20,
+			viewLimit : 5,
+			topActionPos : 90,
+			btmActionPos : 10
+		};
+		gvdpSelFn = schSelGvdp;
+		
+		instData = {
+			scrollObj : $("#schRsChsungScroll"),
+			startNum : 1,
+			endNum : 60,
+			setStatePos : "N", //U 위쪽으로 D 아래쪽으로 N 실행안함
+			total : 0,
+			state : 0,
+			oldScrollHeight : 0,
+			startLoadNum : 0,
+			endLoadNum : 0,
+			keyWord : "",
+			limitLength : 60,
+			batchSize : 20,
+			viewLimit : 5,
+			topActionPos : 90,
+			btmActionPos : 10
+		};
+		instSelFn = schSprvInst;
+		
+		let paramUrl = location.href;
+		
+		if(paramUrl.includes("blngGvdpCdList") || paramUrl.includes("sprvInstClssCdList") || paramUrl.includes("suptBizClsfcCdList") || paramUrl.includes("suptReginCdList") || paramUrl.includes("aplyTrgtCdList") || paramUrl.includes("bizTrgtAgeCdList") || paramUrl.includes("bizEnyyCdList") || paramUrl.includes("scrapYn")){			
+			$("#detailArea").css("display", "block");
+			if($("#selGvdp").children().length == 0){
+				gvdpData.setStatePos = "D";
+				schSelGvdp("", false); //주관부처
+			}
+			if($("#schRsChsung").children().length == 0){
+				instData.setStatePos = "D";
+				schSprvInst("", false); //주관기관
+			}
+			
+			
+			if(bizEnyyCdListCsv != null){
+				for (var i = 0; i < bizEnyyCdList.length; i++) {
+					let obj = bizEnyyCdList[i];
+					for (var j = 0; j < bizEnyyCdListCsv.length; j++) {
+						if(obj.value == bizEnyyCdListCsv[j]){
+							obj.checked = true;
+						}
+					}
+				}
+			}
+		}else{
+			$("#detailArea").css("display", "none");
+			$("#searchComment").css("display", "none");
+			$(".toggle_item").css("display", "none");
+		}
+		
+		fn_init_event_listeners();
+	});
+	
+	// 이벤트 리스너 등록
+	function fn_init_event_listeners() {
+		ItgJs.fn_scrollLazyLoading(gvdpData, gvdpSelFn);
+		ItgJs.fn_scrollLazyLoading(instData, instSelFn);
+	}
+	
+	/* 상단 탭 클릭 */
+	function fn_pbancClssCd_click(pbancClssCd) {
+		$("#searchForm2 input[name='pbancClssCd']").val(pbancClssCd);
+		fn_egov_link_page(1);
+	}
+	
+	/* 정렬 변경 */
+	function fn_ordFld_change(selectEl) {
+		$("#searchForm2 input[name='ordFld']").val(selectEl.value);
+		fn_egov_link_page(1);
+	}
+	
+	/* 주관기관 검색 영역 toggle */
+	function fn_inst_search_toggle() {
+		$('#sprvInstFm').toggle();
+	}
+        
+	/******************************************
+	 * Function 명 : schSprvInst
+	 * Function 기능명 : 주관기관 초성검색
+	 * Return : 
+	 * 작성자 : (주)아이티굿 개발팀 정성탁
+	 * 작성일 : 2022-02-22
+	 * 변경로그 : 2025-07-02 pjh : hasClass 방식으로 비교하게끔 수정
+	 * 변경로그 : 2025-10-22 ksj : razyLoading기능 추가
+	******************************************/
+	function schSprvInst(key, isSch) {
+	 	var schRsChsung = $('#schRsChsung');
+		var scrollObj = $("#schRsChsungScroll");
+		
+		//키워드 버퍼
+		if(isSch){
+			schRsChsung.html("");
+			instData.keyWord = key;
+		}
+		
+		if(instData.state == 0 || (instData.keyWord != "" && isSch)){
+			instData.oldScrollHeight = 0;
+			scrollObj.scrollTop(0);
+			schRsChsung.html("");
+			instData.startNum = 1;
+			instData.endNum = instData.limitLength;
+			instData.startLoadNum = 1;
+			instData.endLoadNum = instData.limitLength;
+			instData.setStatePos = "D";
+		}
+		$.ajax({
+			type : 'post'
+			, url : "/web/comm/commfnSchSprvInstList.do"
+			, contentType : "application/json"
+			, data : JSON.stringify({ "startNum" :instData.startLoadNum, "endNum" : instData.endLoadNum, "keyWord" : instData.keyWord })
+			, dataType : "json"
+			, async : false /* 검색 조건(주관부처)을 다시 불러올때 이 ajax의 결과 값을 가져오기 위해 */
+			, success : function(data) {
+				let rs = data.result;
+				let html = "";
+				let instTagList = $("input[name='instTagList']");
+				
+				//금요일의 내가 남긴 메시지 = 여기는 이제 제거 시에 체크되는거 추가하면 끝나고 검색부분에도 체크 되는거 해야하고 페이지 뒤로가기 했을 때 태그랑 다 잘나오게 바꿔야함
+				
+				if(instData.setStatePos == "N" || instData.setStatePos == null){
+					
+				}else{
+					rs.forEach(function(item){
+		    			html += '<div class="display">';
+		    			if(instTagList.length > 0){
+			    			let create = false;
+			    			for (var i = 0; i < instTagList.length; i++) {							
+				    			if(instTagList[i].value == item.cd){
+				    				html += '<input type="checkbox"  id="'+item.cd+'" name="sprvInstClssCdList"  value="'+item.cd+'" onchange="fn_addTag(this, \''+item.cd+'\', \''+item.cdNm+'\');" checked>';
+				    				create = true;
+				    			}
+			    			}
+			    			if(!create){
+			    				html += '<input type="checkbox"  id="'+item.cd+'" name="sprvInstClssCdList"  value="'+item.cd+'" onchange="fn_addTag(this, \''+item.cd+'\', \''+item.cdNm+'\');">';
+			    			}
+		    			}else{
+		    				html += '<input type="checkbox"  id="'+item.cd+'" name="sprvInstClssCdList"  value="'+item.cd+'" onchange="fn_addTag(this, \''+item.cd+'\', \''+item.cdNm+'\');">';
+		    			}
+				    	html += '<input type="hidden" name="sprvInstNmList"  value="'+item.cdNm+'">';
+				    	html += '<label  for="'+item.cd+'">'+item.cdNm+'</label>';
+				    	html += '</div>';
+					})
+					
+					//불러온 만큼 제거				
+	    			if(schRsChsung.children().length >= instData.limitLength){	
+	    				for (var i = 0; i < rs.length; i++) {	
+	    					if(instData.setStatePos == "U"){
+	    						schRsChsung.children().eq(instData.limitLength - rs.length).remove();
+	    					}else if(instData.setStatePos == "D"){					
+	    						schRsChsung.children().eq(0).remove();
+	    					}
+						}
+	    			}
+					
+					if(instData.setStatePos == "U"){
+						schRsChsung.prepend(html);
+					}else if(instData.setStatePos == "D"){
+						schRsChsung.append(html);
+					}
+		    	}
+				instData.total = data.instTotal;
+			}
+		});
+	}
+	
+	/*태그 추가*/
+	function fn_addTag(clickObj, tagCd, tagNm){
+		var blngTagList = $("#blngTagList");
+		var instTagList = $("#instTagList");
+		var html = "";
+		var isCheck = clickObj.checked;
+		var isBlng = clickObj.name == "blngGvdpCdList" ? true: false;
+		
+		if(isCheck){	
+			html += '<span class="tag-item">';
+			html += '<span>'+ tagNm +'</span>';
+			html += '<button type="button" class="btn-remove-tag" aria-label="' + tagNm + ' 태그 삭제" onClick="fn_delTag(this);"></button>';
+			if(isBlng){
+				html += '<input type="hidden" name="blngTagList" value="' + tagCd + '"></button>';
+				if(blngTagList.children().length < 5){
+					blngTagList.append(html);
+				}else{
+					alert("주관부처는 최대 5개까지 선택 가능합니다.");
+					clickObj.checked = false;
+				}
+			}else{
+				html += '<input type="hidden" name="instTagList" value="' + tagCd + '"></button>';
+				if(instTagList.children().length < 5){
+					instTagList.append(html);
+				}else{
+					alert("주관기관은 최대 5개까지 선택 가능합니다.");
+					clickObj.checked = false;
+				}
+			}
+			html += '</span>';
+		}else{
+			isCheck = false;
+			if(isBlng){
+				fn_delTag(blngTagList.find('input[value="'+tagCd+'"]'));
+			}else{
+				fn_delTag(instTagList.find('input[value="'+tagCd+'"]'));
+			}
+		}
+	}
+	
+	/*태그 제거*/
+	function fn_delTag(obj){
+		let target;
+		
+	    if (obj.nodeType === 1) { 
+	    	//태그가 button일 경우
+	        target = $(obj);
+
+	    	let targetVal =  target.parent().find('input').val();
+	    	
+	    	//부처 tag일 경우
+	        if(targetVal.includes("SVSN_GOVD")){
+	        	$("#selGvdp").find('input[value="'+ targetVal +'"]').prop("checked", false);
+	        }else{
+	        	$("#schRsChsung").find('input[value="'+ targetVal +'"]').prop("checked", false);
+	        }
+	    }else if (obj instanceof jQuery) { 
+	    	//태그가 input일 경우
+	        target = obj;
+	    }else{
+	    	return false;
+	    }
+	    
+	    target.parent().remove();
+	}
+	
+	/* 주관부처 목록 get, 파라미터 : 검색 키워드, 검색버튼을 눌렀는지*/
+	function schSelGvdp(key, isSch){
+		var selGvdp = $('#selGvdp');
+		var scrollObj = $("#selGvdpScroll");
+		
+		//키워드 버퍼
+		if(isSch){
+			selGvdp.html("");
+			gvdpData.keyWord = key;
+		}		
+				
+		if(gvdpData.state == 0 || (gvdpData.keyWord != "" && isSch)){
+			gvdpData.oldScrollHeight = 0;
+			scrollObj.scrollTop(0);
+			selGvdp.html("");
+			gvdpData.startNum = 1;
+			gvdpData.endNum = gvdpData.limitLength;
+			gvdpData.startLoadNum = 1;
+			gvdpData.endLoadNum = gvdpData.limitLength;
+			gvdpData.setStatePos = "D";
+		}
+		
+		$.ajax({
+			type : 'post'
+			, url : "/web/comm/commfnSchSprvGvdpList.do"
+			, contentType : "application/json"
+			, data : JSON.stringify({ "startNum" :gvdpData.startLoadNum, "endNum" : gvdpData.endLoadNum, "keyWord" : gvdpData.keyWord })
+			, dataType : "json"
+			, async : false /* 검색 조건(주관부처)을 다시 불러올때 이 ajax의 결과 값을 가져오기 위해 */
+			, success : function(data) {
+				let rs = data.result;
+				let html = "";
+				let blngTagList = $("input[name='blngTagList']");
+				
+				//금요일의 내가 남긴 메시지 = 여기는 이제 제거 시에 체크되는거 추가하면 끝나고 검색부분에도 체크 되는거 해야하고 페이지 뒤로가기 했을 때 태그랑 다 잘나오게 바꿔야함
+				
+				if(gvdpData.setStatePos == "N" || gvdpData.setStatePos == null){
+					
+				}else{
+					rs.forEach(function(item){
+		    			html += '<div class="display">';
+		    			if(blngTagList.length > 0){
+			    			let create = false;
+			    			for (var i = 0; i < blngTagList.length; i++) {							
+				    			if(blngTagList[i].value == item.cd){
+				    				html += '<input type="checkbox" id="'+item.cd+'" name="blngGvdpCdList"  value="'+item.cd+'" onchange="fn_addTag(this, \''+item.cd+'\', \''+item.cdNm+'\');" checked>';
+				    				create = true;
+				    			}
+			    			}
+			    			if(!create){
+			    				html += '<input type="checkbox" id="'+item.cd+'" name="blngGvdpCdList"  value="'+item.cd+'" onchange="fn_addTag(this, \''+item.cd+'\', \''+item.cdNm+'\');">';
+			    			}
+		    			}else{
+		    				html += '<input type="checkbox" id="'+item.cd+'" name="blngGvdpCdList"  value="'+item.cd+'" onchange="fn_addTag(this, \''+item.cd+'\', \''+item.cdNm+'\');">';
+		    			}
+				    	html += '<input type="hidden" name="blngGvdpNmList"  value="'+item.cdNm+'">';
+				    	html += '<label for="'+item.cd+'">'+item.cdNm+'</label>';
+				    	html += '</div>';
+					})
+					
+					//불러온 만큼 제거				
+	    			if(selGvdp.children().length >= gvdpData.limitLength){	
+	    				for (var i = 0; i < rs.length; i++) {	
+	    					if(gvdpData.setStatePos == "U"){
+	    						selGvdp.children().eq(gvdpData.limitLength - rs.length).remove();
+	    					}else if(gvdpData.setStatePos == "D"){					
+	    						selGvdp.children().eq(0).remove();
+	    					}
+						}
+	    			}
+					
+					if(gvdpData.setStatePos == "U"){
+						selGvdp.prepend(html);
+					}else if(gvdpData.setStatePos == "D"){
+						selGvdp.append(html);
+					}
+		    	}
+				gvdpData.total = data.gvdpTotal;
+			}
+		});
+	}
+	
+	/******************************************
+	 * Function 명 : fnScrapYn
+	 * Function 기능명 : 주관부처 검색 폼
+	 * Return : 
+	 * 작성자 : 박종혁
+	 * 작성일 : 2022-07-07
+	 * 변경로그 : 2022-07-07
+	******************************************/
+	function fnScrapYn(){
+		let tpSt = $('input:checkbox[id=scrapYnSearch]').is(":checked");
+		if(tpSt == true){
+			$("input[id='scrapYn']").val("Y");
+		}else{
+			$("input[id='scrapYn']").val("N");
+		}
+	}
+	
+	/* 검색 */
+	function fn_search() {
+		fn_egov_link_page(1);
+	}
+	
+	function charCheck(ele, keyCode){
+		if(keyCode == 13) {fn_search();}
+	}
+	
+	function gvdpEnterEvent(value, keyCode){
+		if(keyCode == 13) {
+			schSelGvdp(value, true);
+		}
+	}
+	
+	function instEnterEvent(value, keyCode){
+		if(keyCode == 13) {
+			schSprvInst(value, true);
+		}
+	}
+	
+	function btnResetSearch(){
+		//location.href = window.location.origin + window.location.pathname;
+		$("#schStr").val("");
+		$("#blngGvdpKeyword").val("");
+		$("#sprvInstKeyword").val("");
+		$("button.btn-remove-tag").click();
+		$("#searchForm2 input[type='checkbox']").each(function(i,v) { if($(this).prop("checked") == true) { $(this).prop("checked", false); } });
+	}
+
+	function btnSearchDetail(){
+		let detailArea = $("#detailArea");
+		let searchComment = $("#searchComment");
+		let scrapParent = $(".toggle_item");
+		
+		if(detailArea.css("display") != "none"){			
+			searchComment.css("display", "none");
+			detailArea.css("display", "none");
+			scrapParent.css("display", "none");
+		}else{
+			searchComment.css("display", "block");
+			detailArea.css("display", "block");
+			scrapParent.css("display", "block");
+			if($("#selGvdp").children().length == 0){
+				gvdpData.setStatePos = "D";
+				schSelGvdp("", false); //주관부처
+			}
+			if($("#schRsChsung").children().length == 0){
+				instData.setStatePos = "D";
+				schSprvInst("", false); //주관기관
+			}
+		}
+	}
+	
+	
+	/*주관기관 검색*/
+	function btnSprvInstDetail(gvdpKeyWord){
+		var sprvInstNmList = $("input[name='sprvInstNmList']");
+		gvdpKeyWord = gvdpKeyWord.toLowerCase();
+		
+		for (var i = 0; i < sprvInstNmList.length; i++) {
+			if(!sprvInstNmList.eq(i).val().toLowerCase().includes(gvdpKeyWord)){
+				sprvInstNmList.eq(i).parent().get(0).style.display = "none";
+			}else if(sprvInstNmList.eq(i).val().toLowerCase().includes(gvdpKeyWord)){
+				sprvInstNmList.eq(i).parent().get(0).style.display = "";
+			}
+		}
+	}
+	
+	var queryString = "";
+	var page = "1";
+	
+	/* input list를 쉼표 형태 스트링으로 변경 ex) ["1","2","3"] -> "1,2,3" */
+	function fn_get_input_list_to_csv(formInputs) {
+		var inputValArray = [];
+		if (formInputs) {
+			if (formInputs.length) {
+				formInputs.forEach(input => {
+					if(input.name == "blngTagList" || input.name == "instTagList"){						
+						inputValArray.push(input.value);
+					}else{
+						if(input.checked){
+							inputValArray.push(input.value);
+						}
+					}
+				});
+			} else {
+				inputValArray.push(formInputs.value);
+			}
+		}
+		
+		if (inputValArray.length > 0) {
+			return inputValArray.join(",");
+		} else {
+			return "";
+		}
+	}
+
+	/* 검색 및 상세보기 전에 queryString 준비 */
+	function fn_get_query(pageNo) {
+		var tmpQuery = queryString;
+		var f = document.searchForm2;
+		
+		if (pageNo != null) {
+			tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "page", pageNo);
+		}
+		
+		tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "pbancClssCd", f.pbancClssCd.value);
+		tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "ordFld", f.ordFld.value);
+		
+		if ($("#scrapYnSearch").is(":checked")) {
+			tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "scrapYn", "Y");
+		} else {
+			tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "scrapYn", "");
+		}
+		
+		if($("#detailArea").css("display") != "none"){			
+			tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "blngGvdpCdList", encodeURIComponent(fn_get_input_list_to_csv(f.blngTagList)));
+			tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "sprvInstClssCdList", encodeURIComponent(fn_get_input_list_to_csv(f.instTagList)));
+			tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "suptBizClsfcCdList", encodeURIComponent(fn_get_input_list_to_csv(f.suptBizClsfcCdList)));
+			tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "suptReginCdList", encodeURIComponent(fn_get_input_list_to_csv(f.suptReginCdList)));
+			tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "aplyTrgtCdList", encodeURIComponent(fn_get_input_list_to_csv(f.aplyTrgtCdList)));
+			tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "bizTrgtAgeCdList", encodeURIComponent(fn_get_input_list_to_csv(f.bizTrgtAgeCdList)));
+			tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "bizEnyyCdList", encodeURIComponent(fn_get_input_list_to_csv(f.bizEnyyCdList)));
+		}
+		tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "schStr", f.schStr.value);
+		return tmpQuery; 
+	}
+	
+	/* pagination 페이지 링크 function */
+	function fn_egov_link_page(pageNo) {
+		var tmpQuery = fn_get_query(pageNo);
+		location.href = "?" + tmpQuery;
+	}
+	
+	/* 상세화면 클릭 */
+	function go_view(pbancSn) {
+		var tmpQuery = fn_get_query();
+		tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "schM", "view");
+		tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "pbancSn", pbancSn);
+		location.href = "?" + tmpQuery;
+	}
+
+	/* 상세화면(팝업) 클릭 */
+	function go_view_blank(pbancSn) {
+		var tmpQuery = fn_get_query();
+		tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "schM", "view");
+		tmpQuery = ItgJs.fn_replaceQueryString(tmpQuery, "pbancSn", pbancSn);
+		window.open("?" + tmpQuery);
+	}
+
+	function fnScrapAlready() {
+		alert("이미 스크랩한 공고입니다.");
+	}
+	
+	function fnScrapDel(pbancSn, scrapSn) {
+		var scrapDiv = $("#" + pbancSn + "_scrap_div");
+		var bizPbancNm = scrapDiv.find("input[name='scrap_list_bizPbancNm']:first").val()
+		var buttonObj = scrapDiv.find("button:first");
+		
+		$.ajax({
+		      type:'post'
+		    , url: "/web/commfn/commfnScrapDelete.do"
+		    , data:{scrapSn:scrapSn}
+			, dataType: "json"
+			, cache:false
+			, async:false
+			, success: function(data) {
+				var rsv = data.success;
+				if(rsv > 0){
+					buttonObj.removeClass("btn_myList_already");
+					buttonObj.find("span.alt").text("스크랩");
+					buttonObj.attr("title", "스크랩 하기");
+					buttonObj.attr("onclick", "fnScrap(" + pbancSn + ");");
+					alert("스크랩 해제하였습니다.");
+				} else if (rsv < 0) {
+					alert(data.error);
+				}
+			}
+		});
+	}
+	
+	function fnScrap(pbancSn) {
+		var scrapDiv = $("#" + pbancSn + "_scrap_div");
+		var bizPbancNm = scrapDiv.find("input[name='scrap_list_bizPbancNm']:first").val()
+		var buttonObj = scrapDiv.find("button:first");
+		
+		var tistc = '사업공고 > ';
+		var turl = location.pathname;
+		var turl2 = '';
+		
+		if (turl.includes("ongoing.do")) {
+			tistc = tistc + '모집중';
+			turl2 = 'pbancEndYn=N'
+		} else if (turl.includes("deadline.do")) {
+			tistc = tistc + '모집마감';
+			turl2 = 'pbancEndYn=Y'
+		}
+		
+		turl = turl + '?schM=view&pbancSn=' + pbancSn + '&' + turl2;
+		
+		$.ajax({
+		      type:'post'
+		    , url: "/web/commfn/commfnScrapSave.do"
+		    , data:{bitmSqno:pbancSn, titlNm:bizPbancNm, url:turl, istc:tistc, bitmClssCd:'BCC030'}
+			, dataType: "json"
+			, cache:false
+			, async:false
+			, success: function(data) {
+				var rsv = data.success;
+				var scrapSn = data.scrapSn;
+				if(rsv > 0 && scrapSn != ""){
+					buttonObj.addClass("btn_myList_already");
+					buttonObj.find("span.alt").text("스크랩 선택됨");
+					buttonObj.attr("title", "스크랩 해제");
+					buttonObj.attr("onclick", "fnScrapDel(" + pbancSn + ", " + scrapSn + ");");
+					alert("해당 정보를 스크랩하였습니다.");
+				} else if (rsv < 0) {
+					alert(data.error);
+				}
+			}
+		});
+	}
+	
+	function getRSS() {
+		console.log("user_bizPbanc_list... getRSS()");
+		prevOpenCopyUrlPopupFocusElement = document.activeElement;
+		
+		var codeUrl = '';
+		
+		if ($('#rd1').attr('checked') == 'checked') {
+			codeUrl = 'bizpbanc-ongoing.do';
+		} else {
+			alert("해당 페이지는 RSS를 지원하지 않습니다.");
+			return false;
+		}
+				
+		//window.open("./rss/" + codeUrl);
+		var url = location.origin + '/web/contents' + '/rss/' + codeUrl;
+		$('#copytarget').val(url);
+		var copyUrlPopup = document.querySelector(".copyUrlPopup");
+		copyUrlPopup.style.display = "block";
+		
+		setTabInnerLayerPopup("copyUrlPopup");
+	}
+	
+</script>
+
+
+<input type="hidden" id="tpChsung"/>
+<div class="content_wrap">
+	<div class="content">
+	
+		<div class="ann_wrap" id="topPbancDiv" style="padding-bottom: 10px;">
+				<div class="ann_slide-wrap">
+					<div class="slide">
+									<a href='javascript:go_view(175599);'>
+										<div class="ann_top">
+											<div class="left">
+											<span class="flag type04">
+												멘토링ㆍ컨설팅ㆍ교육</span>
+											<span class="flag day">D-28</span>
+														</div>
+											<div class="right">
+												<p class="txt"><i class="xi-calendar pr5"></i>마감일자 2026-01-14</p><i class="xi-calendar pr5"></i>
+											</div>
+										</div>
+										<div class="ann_cont">
+											<div class="tit_wrap">
+												<p class="tit">창업지원사업 예비위원단 추가 모집 (신산업분야)</p>
+											</div>
+											<ul>
+												<li>창업지원사업 예비위원단 추가 모집 (신산업분야)</li>
+												<li>창업진흥원</li>
+												<li>조회 10,662</li>
+											</ul>
+										</div>
+									</a>
+								</div>
+							<div class="slide">
+									<a href='javascript:go_view(175745);'>
+										<div class="ann_top">
+											<div class="left">
+											<span class="flag type03">
+												시설ㆍ공간ㆍ보육</span>
+											<span class="flag day">D-2</span>
+														</div>
+											<div class="right">
+												<p class="txt"><i class="xi-calendar pr5"></i>마감일자 2025-12-19</p><i class="xi-calendar pr5"></i>
+											</div>
+										</div>
+										<div class="ann_cont">
+											<div class="tit_wrap">
+												<p class="tit">2026년 창업존 운영사업 주관기관 모집</p>
+											</div>
+											<ul>
+												<li>창업존</li>
+												<li>창업진흥원</li>
+												<li>조회 9,493</li>
+											</ul>
+										</div>
+									</a>
+								</div>
+							<div class="slide">
+									<a href='javascript:go_view(175737);'>
+										<div class="ann_top">
+											<div class="left">
+											<span class="flag type01">
+												사업화</span>
+											<span class="flag day">D-9</span>
+														</div>
+											<div class="right">
+												<p class="txt"><i class="xi-calendar pr5"></i>마감일자 2025-12-26</p><i class="xi-calendar pr5"></i>
+											</div>
+										</div>
+										<div class="ann_cont">
+											<div class="tit_wrap">
+												<p class="tit">2026년 초격차 스타트업 프로젝트 민간검증 트랙 대·중견기업  추천 공고</p>
+											</div>
+											<ul>
+												<li>초격차 스타트업1000+ 프로젝트</li>
+												<li>창업진흥원</li>
+												<li>조회 10,595</li>
+											</ul>
+										</div>
+									</a>
+								</div>
+							<div class="slide">
+									<a href='javascript:go_view(172777);'>
+										<div class="ann_top">
+											<div class="left">
+											<span class="flag type01">
+												사업화</span>
+											<span class="flag day">D-14</span>
+														</div>
+											<div class="right">
+												<p class="txt"><i class="xi-calendar pr5"></i>마감일자 2025-12-31</p><i class="xi-calendar pr5"></i>
+											</div>
+										</div>
+										<div class="ann_cont">
+											<div class="tit_wrap">
+												<p class="tit">2025년 팁스TIPS 창업기업 지원계획 수정 공고</p>
+											</div>
+											<ul>
+												<li>2025년 팁스(TIPS) 창업기업 지원계획  수정 공고</li>
+												<li>창업진흥원</li>
+												<li>조회 49,383</li>
+											</ul>
+										</div>
+									</a>
+								</div>
+							<div class="slide">
+									<a href='javascript:go_view(172113);'>
+										<div class="ann_top">
+											<div class="left">
+											<span class="flag type04">
+												멘토링ㆍ컨설팅ㆍ교육</span>
+											<span class="flag day">D-14</span>
+														</div>
+											<div class="right">
+												<p class="txt"><i class="xi-calendar pr5"></i>마감일자 2025-12-31</p><i class="xi-calendar pr5"></i>
+											</div>
+										</div>
+										<div class="ann_cont">
+											<div class="tit_wrap">
+												<p class="tit">2025년 스타트업 법률지원 참여기업 모집공고</p>
+											</div>
+											<ul>
+												<li>스타트업 법률지원</li>
+												<li>창업진흥원</li>
+												<li>조회 30,629</li>
+											</ul>
+										</div>
+									</a>
+								</div>
+							<div class="slide">
+									<a href='javascript:go_view(171549);'>
+										<div class="ann_top">
+											<div class="left">
+											<span class="flag type01">
+												사업화</span>
+											<span class="flag day">D-14</span>
+														</div>
+											<div class="right">
+												<p class="txt"><i class="xi-calendar pr5"></i>마감일자 2025-12-31</p><i class="xi-calendar pr5"></i>
+											</div>
+										</div>
+										<div class="ann_cont">
+											<div class="tit_wrap">
+												<p class="tit">2025년 중앙부처 및 지자체 창업지원사업 통합공고</p>
+											</div>
+											<ul>
+												<li>2025년 중앙부처 및 지자체 창업지원사업 통합공고</li>
+												<li>창업진흥원</li>
+												<li>조회 166,827</li>
+											</ul>
+										</div>
+									</a>
+								</div>
+							<div class="slide">
+									<a href='javascript:go_view(171483);'>
+										<div class="ann_top">
+											<div class="left">
+											<span class="flag type01">
+												사업화</span>
+											<span class="flag day">D-14</span>
+														</div>
+											<div class="right">
+												<p class="txt"><i class="xi-calendar pr5"></i>마감일자 2025-12-31</p><i class="xi-calendar pr5"></i>
+											</div>
+										</div>
+										<div class="ann_cont">
+											<div class="tit_wrap">
+												<p class="tit">「넷제로 챌린지X」 통합 공고</p>
+											</div>
+											<ul>
+												<li>「넷제로 챌린지X」 통합 공고</li>
+												<li>창업진흥원</li>
+												<li>조회 42,527</li>
+											</ul>
+										</div>
+									</a>
+								</div>
+							<div class="slide">
+									<a href='javascript:go_view(171419);'>
+										<div class="ann_top">
+											<div class="left">
+											<span class="flag type07">
+												인력</span>
+											<span class="flag day">D-3301</span>
+														</div>
+											<div class="right">
+												<p class="txt"><i class="xi-calendar pr5"></i>마감일자 2034-12-31</p><i class="xi-calendar pr5"></i>
+											</div>
+										</div>
+										<div class="ann_cont">
+											<div class="tit_wrap">
+												<p class="tit">Announcement on Application for Recommendations for the “Startup Korea Special Visa”</p>
+											</div>
+											<ul>
+												<li>Announcement on Application for Recommendations for the “Startup Korea Special Visa”</li>
+												<li>창업진흥원</li>
+												<li>조회 20,842</li>
+											</ul>
+										</div>
+									</a>
+								</div>
+							<div class="slide">
+									<a href='javascript:go_view(168088);'>
+										<div class="ann_top">
+											<div class="left">
+											<span class="flag type02">
+												창업교육</span>
+											<span class="flag day">D-14</span>
+														</div>
+											<div class="right">
+												<p class="txt"><i class="xi-calendar pr5"></i>마감일자 2025-12-31</p><i class="xi-calendar pr5"></i>
+											</div>
+										</div>
+										<div class="ann_cont">
+											<div class="tit_wrap">
+												<p class="tit">온라인 법인설립시스템 길라잡이 서비스 참여 모집</p>
+											</div>
+											<ul>
+												<li>온라인 법인설립시스템 길라잡이 서비스</li>
+												<li>창업진흥원</li>
+												<li>조회 49,927</li>
+											</ul>
+										</div>
+									</a>
+								</div>
+							</div>
+				
+				<div class="slide_ctl">
+					<button type="button" class="s4_prev" ><span class="blind">이전</span></button>
+					<button type="button" class="s4_stop" style="display: none;"><span class="blind">정지</span></button>
+					<button type="button" class="s4_play" style="display: inline-block;"><span class="blind">재생</span></button>
+					<button type="button" class="s4_next" ><span class="blind">다음</span></button>
+				</div>
+			</div>
+		<div class="custom_search-wrap">
+			<div class="tab_buttom-wrap tab_container mb20" >
+				<ul id="pbancClssTab" class="tab_button">     
+					<li class="" id="pbancClss_PBC010">
+									<a href="javascript:fn_pbancClssCd_click('PBC010');" class="btn_tab" title="">
+										<span>중앙부처 · 지자체 · 공공기관</span>
+									</a>
+									</li>	
+							<li class="active" id="pbancClss_PBC020">
+									<a href="javascript:fn_pbancClssCd_click('PBC020');" class="btn_tab" title="민간기관 · 교육기관이 선택됨">
+										<span>민간기관 · 교육기관</span>
+									</a>
+									</li>	
+							</ul>
+			</div>
+			<form name="searchForm2" id="searchForm2" enctype="multipart/form-data" onSubmit="return false;">
+				<input type="hidden" name="pbancClssCd" value="PBC020"/>
+				<input type="hidden" name="ordFld" value=""/>
+				<input type="hidden" name="pbancEndYn" value="N"/>
+				<input type="hidden" id="scrapYn" name="scrapYn" value=""/>
+
+				<div class="result_section">
+					<div class="cst_result-wrap">
+						<div class="result_out_wrap">
+							<div class="cst_option-box">
+								<div class="cst_src-box">
+								  <div class="src">
+									<label for="schStr"><span class="blind">검색어 입력</span></label>
+									<input type="text" onkeyup="charCheck(this, window.event.keyCode);" onkeydown="charCheck(this, window.event.keyCode);" name="schStr" id="schStr" title="검색어 입력" placeholder="검색어를 입력하세요." value="">
+									<button type="button" class="btn_bn-bl" onclick="javascript:fn_search();"><i class="xi-search fz25"></i></button>
+								  </div>
+								  <div class="btn_box">
+									<button type="button" class="btn_reset" onclick="btnResetSearch();"><span>초기화</span></button>
+									<button type="button" class="btn_detail" onclick="btnSearchDetail();"><span>상세검색<i class="xi-angle-down-min pl5"></i></span></button>
+								  </div>
+								</div>
+								<div class="cst_info_bar">
+									<p class="txt tal"  id="searchComment">다양한 조건을 설정하여 사업공고를 검색 할 수 있습니다. <span class="blue">(중복선택 가능)</span> </p>
+									<div class="toggle_item"> 
+										</div>
+								</div>
+							</div>
+							<div id="detailArea">
+								<div class="wrap input_wrap">
+								   <div class="grid table_wrap"> 
+								     <!-- 주관부처 -->
+								     <div class="field">
+								       <div class="label-row"> <strong class="label mt5">주관부처</strong>
+								         <input type="text" id="blngGvdpKeyword" onkeyup="gvdpEnterEvent($('#blngGvdpKeyword').val(), window.event.keyCode);" onkeydown="gvdpEnterEvent($('#blngGvdpKeyword').val(), window.event.keyCode);" class="input bg_w pt10 pb10" placeholder="" aria-label="주관부처 검색어 입력" title="주관부처 검색어 입력">
+								         <button type="button" class="btn" onclick="schSelGvdp($('#blngGvdpKeyword').val(), true);">부처검색</button>
+								       </div>
+								       <div class="tag-box-wrap" id="blngTagList">
+											
+										</div>
+								       <div class="panel" id="selGvdpScroll" role="group" aria-label="주관부처 목록">
+								         <div id="selGvdp" class="check_wrap">
+								         </div>
+								       </div>
+								     </div>
+								     <!-- 주관기관 -->
+								     <div class="field">
+								       <div class="label-row"> <strong class="label">주관기관</strong>
+								         <input type="text" id="sprvInstKeyword" onkeyup="instEnterEvent($('#sprvInstKeyword').val(), window.event.keyCode);" onkeydown="instEnterEvent($('#sprvInstKeyword').val(), window.event.keyCode);" class="input bg_w pt10 pb10" placeholder="" aria-label="주관기관 검색어 입력" title="주관기관 검색어 입력">
+								         <button type="button" class="btn" onclick="schSprvInst($('#sprvInstKeyword').val(), true);">기관검색</button>
+								       </div>
+								       <div class="tag-box-wrap" id="instTagList">
+											
+										</div>
+								       <div class="panel" id="schRsChsungScroll" role="group" aria-label="주관기관 목록">
+								         <div id="schRsChsung" class="check_wrap">							         
+								         </div>
+								       </div>
+								     </div>
+								   </div>
+								</div>
+								<div class="wrap input_wrap">
+								    <div class="wide input_wrap mt0"> <strong class="title">지원분야</strong>
+								      <div class="check_wrap">
+								        <div class="display">
+								          		<input type="checkbox" id="suptBizClsfcCd_0" name="suptBizClsfcCdList"  value="SUPPORT_BIZ_TYPE_001">
+								          		<label for="suptBizClsfcCd_0">사업화</label>
+								        	</div>
+								        <div class="display">
+								          		<input type="checkbox" id="suptBizClsfcCd_1" name="suptBizClsfcCdList"  value="SUPPORT_BIZ_TYPE_012">
+								          		<label for="suptBizClsfcCd_1">기술개발(R&amp;D)</label>
+								        	</div>
+								        <div class="display">
+								          		<input type="checkbox" id="suptBizClsfcCd_2" name="suptBizClsfcCdList"  value="SUPPORT_BIZ_TYPE_006">
+								          		<label for="suptBizClsfcCd_2">시설ㆍ공간ㆍ보육</label>
+								        	</div>
+								        <div class="display">
+								          		<input type="checkbox" id="suptBizClsfcCd_3" name="suptBizClsfcCdList"  value="SUPPORT_BIZ_TYPE_009">
+								          		<label for="suptBizClsfcCd_3">멘토링ㆍ컨설팅ㆍ교육</label>
+								        	</div>
+								        <div class="display">
+								          		<input type="checkbox" id="suptBizClsfcCd_4" name="suptBizClsfcCdList"  value="SUPPORT_BIZ_TYPE_022">
+								          		<label for="suptBizClsfcCd_4">글로벌</label>
+								        	</div>
+								        <div class="display">
+								          		<input type="checkbox" id="suptBizClsfcCd_5" name="suptBizClsfcCdList"  value="SUPPORT_BIZ_TYPE_023">
+								          		<label for="suptBizClsfcCd_5">인력</label>
+								        	</div>
+								        <div class="display">
+								          		<input type="checkbox" id="suptBizClsfcCd_6" name="suptBizClsfcCdList"  value="SUPPORT_BIZ_TYPE_021">
+								          		<label for="suptBizClsfcCd_6">융자</label>
+								        	</div>
+								        <div class="display">
+								          		<input type="checkbox" id="suptBizClsfcCd_7" name="suptBizClsfcCdList"  value="SUPPORT_BIZ_TYPE_004">
+								          		<label for="suptBizClsfcCd_7">행사ㆍ네트워크</label>
+								        	</div>
+								        <div class="display">
+								          		<input type="checkbox" id="suptBizClsfcCd_8" name="suptBizClsfcCdList"  value="SUPPORT_BIZ_TYPE_005">
+								          		<label for="suptBizClsfcCd_8">창업교육</label>
+								        	</div>
+								        <div class="display">
+								          		<input type="checkbox" id="suptBizClsfcCd_9" name="suptBizClsfcCdList"  value="SUPPORT_BIZ_TYPE_003">
+								          		<label for="suptBizClsfcCd_9">판로ㆍ해외진출</label>
+								        	</div>
+								        <div class="display">
+								          		<input type="checkbox" id="suptBizClsfcCd_10" name="suptBizClsfcCdList"  value="SUPPORT_BIZ_TYPE_002">
+								          		<label for="suptBizClsfcCd_10">정책자금</label>
+								        	</div>
+								        </div>
+								    </div>
+								    <div class="wide input_wrap mt0"> <strong class="title">지역</strong>
+								      <div class="check_wrap">
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_0"  name="suptReginCdList"  value="LC00">
+									        		<label for="suptReginCd_0">전국</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_1"  name="suptReginCdList"  value="LC01">
+									        		<label for="suptReginCd_1">서울특별시</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_2"  name="suptReginCdList"  value="LC02">
+									        		<label for="suptReginCd_2">부산광역시</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_3"  name="suptReginCdList"  value="LC03">
+									        		<label for="suptReginCd_3">대구광역시</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_4"  name="suptReginCdList"  value="LC04">
+									        		<label for="suptReginCd_4">인천광역시</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_5"  name="suptReginCdList"  value="LC05">
+									        		<label for="suptReginCd_5">광주광역시</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_6"  name="suptReginCdList"  value="LC06">
+									        		<label for="suptReginCd_6">대전광역시</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_7"  name="suptReginCdList"  value="LC07">
+									        		<label for="suptReginCd_7">울산광역시</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_8"  name="suptReginCdList"  value="LC17">
+									        		<label for="suptReginCd_8">세종특별자치시</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_9"  name="suptReginCdList"  value="LC09">
+									        		<label for="suptReginCd_9">강원도</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_10"  name="suptReginCdList"  value="LC08">
+									        		<label for="suptReginCd_10">경기도</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_11"  name="suptReginCdList"  value="LC12">
+									        		<label for="suptReginCd_11">경상남도</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_12"  name="suptReginCdList"  value="LC13">
+									        		<label for="suptReginCd_12">경상북도</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_13"  name="suptReginCdList"  value="LC14">
+									        		<label for="suptReginCd_13">전라남도</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_14"  name="suptReginCdList"  value="LC15">
+									        		<label for="suptReginCd_14">전라북도</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_15"  name="suptReginCdList"  value="LC10">
+									        		<label for="suptReginCd_15">충청남도</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_16"  name="suptReginCdList"  value="LC11">
+									        		<label for="suptReginCd_16">충청북도</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="suptReginCd_17"  name="suptReginCdList"  value="LC16">
+									        		<label for="suptReginCd_17">제주특별자치도</label>
+								        	</div>
+								        </div>
+								    </div>
+								    <div class="wide input_wrap mt0"> <strong class="title">대상</strong>
+								      <div class="check_wrap">
+								        <div class="display">
+									        		<input type="checkbox" id="aplyTrgtCd_0" name="aplyTrgtCdList"  value="POST_TARGET_TYPE_01">
+									        		<label for="aplyTrgtCd_0">청소년</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="aplyTrgtCd_1" name="aplyTrgtCdList"  value="POST_TARGET_TYPE_02">
+									        		<label for="aplyTrgtCd_1">대학생</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="aplyTrgtCd_2" name="aplyTrgtCdList"  value="POST_TARGET_TYPE_03">
+									        		<label for="aplyTrgtCd_2">일반인</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="aplyTrgtCd_3" name="aplyTrgtCdList"  value="POST_TARGET_TYPE_04">
+									        		<label for="aplyTrgtCd_3">대학</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="aplyTrgtCd_4" name="aplyTrgtCdList"  value="POST_TARGET_TYPE_05">
+									        		<label for="aplyTrgtCd_4">연구기관</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="aplyTrgtCd_5" name="aplyTrgtCdList"  value="POST_TARGET_TYPE_06">
+									        		<label for="aplyTrgtCd_5">일반기업</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="aplyTrgtCd_6" name="aplyTrgtCdList"  value="POST_TARGET_TYPE_07">
+									        		<label for="aplyTrgtCd_6">1인 창조기업</label>
+								        	</div>
+								        </div>
+								    </div>
+								    <div class="wide input_wrap mt0"> <strong class="title">연령</strong>
+								      <div class="check_wrap">
+								        <div class="display">
+									        		<input type="checkbox" id="bizTrgtAgeCd_0" name="bizTrgtAgeCdList"  value="POST_TARGET_AGE_10">
+									        		<label for="bizTrgtAgeCd_0">만 20세 미만</label>
+								        	</div>
+								        	 <div class="display">
+									        		<input type="checkbox" id="bizTrgtAgeCd_1" name="bizTrgtAgeCdList"  value="POST_TARGET_AGE_20">
+									        		<label for="bizTrgtAgeCd_1">만 20세 이상 ~ 만 39세 이하</label>
+								        	</div>
+								        	 <div class="display">
+										         	<input type="checkbox" id="bizTrgtAgeCd1020" name="bizTrgtAgeCdList"  value="POST_TARGET_AGE_1020">
+											    	<label for="bizTrgtAgeCd1020">만 39세 이하</label>
+										        </div>
+									        <div class="display">
+									        		<input type="checkbox" id="bizTrgtAgeCd_2" name="bizTrgtAgeCdList"  value="POST_TARGET_AGE_40">
+									        		<label for="bizTrgtAgeCd_2">만 40세 이상</label>
+								        	</div>
+								        	 </div>
+								    </div>
+								    <div class="wide input_wrap mt0"> <strong class="title">창업업력</strong>
+								      <div class="check_wrap">
+								        <div class="display">
+									        		<input type="checkbox" id="bizEnyyCd_0" name="bizEnyyCdList"  value="POST_TARGET_COM_AGE_00">
+									        		<label for="bizEnyyCd_0">예비창업자</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="bizEnyyCd_1" name="bizEnyyCdList"  value="POST_TARGET_COM_AGE_01">
+									        		<label for="bizEnyyCd_1">1년미만</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="bizEnyyCd_2" name="bizEnyyCdList"  value="POST_TARGET_COM_AGE_02">
+									        		<label for="bizEnyyCd_2">2년미만</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="bizEnyyCd_3" name="bizEnyyCdList"  value="POST_TARGET_COM_AGE_03">
+									        		<label for="bizEnyyCd_3">3년미만</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="bizEnyyCd_4" name="bizEnyyCdList"  value="POST_TARGET_COM_AGE_05">
+									        		<label for="bizEnyyCd_4">5년미만</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="bizEnyyCd_5" name="bizEnyyCdList"  value="POST_TARGET_COM_AGE_07">
+									        		<label for="bizEnyyCd_5">7년미만</label>
+								        	</div>
+								        <div class="display">
+									        		<input type="checkbox" id="bizEnyyCd_6" name="bizEnyyCdList"  value="POST_TARGET_COM_AGE_10">
+									        		<label for="bizEnyyCd_6">10년미만</label>
+								        	</div>
+								        </div>
+								    </div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</form>
 		</div>
+		<div class="cst_top">
+			<div class="src_wrap">
+				<div class="left_wrap">
+					<label for="pbancOrdr"><span class="blind">정렬 유형 선택</span></label>
+					<select id="pbancOrdr" title="정렬 유형 선택" class="select_style1" onchange="fn_ordFld_change(this);">
+						<option value="regist" >공고등록순</option>
+						<option value="bgng" >공고시작일순(오름차순)</option>
+						<option value="bgngDesc" >공고시작일순(내림차순)</option>
+						<option value="deadline" >공고마감순</option>
+							</select>
+				</div>
+			</div>
+		</div>
+		<div class="custom_src-board">
+			<div class="board_list-wrap" id="bizPbancList">
+				<ul>
+					<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type04">
+													멘토링ㆍ컨설팅ㆍ교육</span>
+						
+												<span class="flag day">D-34</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175742);'>
+													<div class="tit_wrap">
+														<p class="tit">강동  K-ISS 멘토링센터 전담멘티 2기 모집</p>
+														<span class="new">새로운게시글</span>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>강동 K-ISS멘토링센터 전담멘티 2기 모집</span>
+												<span class="list"><i class="xi-info-o pr5"></i>주식회사 이노시아</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-12-15</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-12-10</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2026-01-20</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 257</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175742_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="강동  K-ISS 멘토링센터 전담멘티 2기 모집" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175742);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175742);" title="[강동  K-ISS 멘토링센터 전담멘티 2기 모집 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type01">
+													사업화</span>
+						
+												<span class="flag day">D-14</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175759);'>
+													<div class="tit_wrap">
+														<p class="tit">2025년 특허출원·등록 바우처 비용 지원사업</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>2025년 특허출원·등록 바우처 비용 지원사업</span>
+												<span class="list"><i class="xi-info-o pr5"></i>(사)한국중소기업발전협회</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-12-12</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-12-16</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2025-12-31</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 243</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175759_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="2025년 특허출원·등록 바우처 비용 지원사업" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175759);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175759);" title="[2025년 특허출원·등록 바우처 비용 지원사업 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type01">
+													사업화</span>
+						
+												<span class="flag day">D-14</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175761);'>
+													<div class="tit_wrap">
+														<p class="tit">25년 12월 스타트업 언론 홍보 지원사업 참가사 모집 공고(2차)</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>25년 12월 스타트업 언론 홍보 지원사업 참가사 모집 공고(2차)</span>
+												<span class="list"><i class="xi-info-o pr5"></i>스타트업데일리</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-12-12</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-12-15</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2025-12-31</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 438</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175761_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="25년 12월 스타트업 언론 홍보 지원사업 참가사 모집 공고(2차)" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175761);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175761);" title="[25년 12월 스타트업 언론 홍보 지원사업 참가사 모집 공고(2차) 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type04">
+													멘토링ㆍ컨설팅ㆍ교육</span>
+						
+												<span class="flag day">오늘마감</span>	
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175734);'>
+													<div class="tit_wrap">
+														<p class="tit">[성동청년 창업이룸센터] &#034;스타트업을 위한 마케팅 가이드라인:실전 마케팅 &amp; 세일즈 전략&#034; 특강 참여신청</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>[성동청년 창업이룸센터] &#034;스타트업을 위한 마케팅 가이드라인:실전 마케팅 &amp; 세일즈 전략&#034; 특강 참여신청</span>
+												<span class="list"><i class="xi-info-o pr5"></i>(재)성동벤처밸리</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-12-11</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-12-08</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2025-12-17</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 421</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175734_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="[성동청년 창업이룸센터] &#034;스타트업을 위한 마케팅 가이드라인:실전 마케팅 &amp; 세일즈 전략&#034; 특강 참여신청" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175734);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175734);" title="[[성동청년 창업이룸센터] &#034;스타트업을 위한 마케팅 가이드라인:실전 마케팅 &amp; 세일즈 전략&#034; 특강 참여신청 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type04">
+													멘토링ㆍ컨설팅ㆍ교육</span>
+						
+												<span class="flag day">D-1</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175732);'>
+													<div class="tit_wrap">
+														<p class="tit">[성동청년 창업이룸센터] &#034;스타트업 세무 A to Z: 절세부터 리스크까지 한 번에 끝내는 실전 특강&#034; 참여신청 </p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>[성동청년 창업이룸센터] &#034;스타트업 세무 A to Z: 절세부터 리스크까지 한 번에 끝내는 실전 특강&#034; 참여신청 </span>
+												<span class="list"><i class="xi-info-o pr5"></i>(재)성동벤처밸리</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-12-10</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-12-08</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2025-12-18</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 258</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175732_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="[성동청년 창업이룸센터] &#034;스타트업 세무 A to Z: 절세부터 리스크까지 한 번에 끝내는 실전 특강&#034; 참여신청 " />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175732);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175732);" title="[[성동청년 창업이룸센터] &#034;스타트업 세무 A to Z: 절세부터 리스크까지 한 번에 끝내는 실전 특강&#034; 참여신청  새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type03">
+													시설ㆍ공간ㆍ보육</span>
+						
+												<span class="flag day">D-44</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175736);'>
+													<div class="tit_wrap">
+														<p class="tit">2026년 달구벌여성창업보육센터 1차 입주기업 모집</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>2026년 달구벌여성창업보육센터 1차 입주기업 모집</span>
+												<span class="list"><i class="xi-info-o pr5"></i>달구벌여성인력개발센터</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-12-09</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-12-08</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2026-01-30</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 240</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175736_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="2026년 달구벌여성창업보육센터 1차 입주기업 모집" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175736);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175736);" title="[2026년 달구벌여성창업보육센터 1차 입주기업 모집 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type05">
+													행사ㆍ네트워크</span>
+						
+												<span class="flag day">오늘마감</span>	
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175735);'>
+													<div class="tit_wrap">
+														<p class="tit">Ask about the Residency | Founders’ Guide to Antler Korea (EN)</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>Ask about the Residency | Founders’ Guide to Antler Korea (EN)</span>
+												<span class="list"><i class="xi-info-o pr5"></i>앤틀러코리아</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-12-09</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-12-08</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2025-12-17</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 232</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175735_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="Ask about the Residency | Founders’ Guide to Antler Korea (EN)" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175735);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175735);" title="[Ask about the Residency | Founders’ Guide to Antler Korea (EN) 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type04">
+													멘토링ㆍ컨설팅ㆍ교육</span>
+						
+												<span class="flag day">D-12</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175700);'>
+													<div class="tit_wrap">
+														<p class="tit">2026년 대비 창업 초보를 위한 창업 A-Z 교육</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>[12월 창업 온라인 교육] 2026년 대비 창업 초보를 위한 창업 A-Z 교육</span>
+												<span class="list"><i class="xi-info-o pr5"></i>(주)하우그로우</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-12-04</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-12-03</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2025-12-29</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 788</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 교육</span>
+													<div id="175700_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="2026년 대비 창업 초보를 위한 창업 A-Z 교육" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175700);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175700);" title="[2026년 대비 창업 초보를 위한 창업 A-Z 교육 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type04">
+													멘토링ㆍ컨설팅ㆍ교육</span>
+						
+												<span class="flag day">D-11</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175689);'>
+													<div class="tit_wrap">
+														<p class="tit">[스타트업 1:1 무료 컨설팅] 디자인, 설계, 제조  관련 코칭데이 모집</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>[스타트업 1:1 무료 컨설팅] 디자인, 설계, 제조  관련 코칭데이 모집</span>
+												<span class="list"><i class="xi-info-o pr5"></i>인탑스 주식회사</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-12-02</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-12-01</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2025-12-28</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 512</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175689_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="[스타트업 1:1 무료 컨설팅] 디자인, 설계, 제조  관련 코칭데이 모집" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175689);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175689);" title="[[스타트업 1:1 무료 컨설팅] 디자인, 설계, 제조  관련 코칭데이 모집 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type04">
+													멘토링ㆍ컨설팅ㆍ교육</span>
+						
+												<span class="flag day">D-14</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175677);'>
+													<div class="tit_wrap">
+														<p class="tit">2025년 12월 쿠팡 마켓플레이스 판매자 교육 웨비나</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>2025년 12월 쿠팡 마켓플레이스 판매자 교육 웨비나</span>
+												<span class="list"><i class="xi-info-o pr5"></i>쿠팡 주식회사</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-12-02</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-12-01</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2025-12-31</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 484</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175677_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="2025년 12월 쿠팡 마켓플레이스 판매자 교육 웨비나" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175677);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175677);" title="[2025년 12월 쿠팡 마켓플레이스 판매자 교육 웨비나 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type01">
+													사업화</span>
+						
+												<span class="flag day">D-14</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175669);'>
+													<div class="tit_wrap">
+														<p class="tit">2025 벤처확인 준비기업 맞춤형 진단평가 지원사업</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>2025 벤처확인 준비기업 맞춤형 진단평가 지원사업</span>
+												<span class="list"><i class="xi-info-o pr5"></i>(주)엠비즈플래닛(혁신기술경영지원센터)</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-12-01</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-12-01</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2025-12-31</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 1,857</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175669_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="2025 벤처확인 준비기업 맞춤형 진단평가 지원사업" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175669);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175669);" title="[2025 벤처확인 준비기업 맞춤형 진단평가 지원사업 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type01">
+													사업화</span>
+						
+												<span class="flag day">D-14</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175658);'>
+													<div class="tit_wrap">
+														<p class="tit">2025년 스타트업/중소기업 대상 기업성장 및 홍보 지원사업</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>2025년 스타트업/중소기업 대상 기업성장 및 홍보 지원사업</span>
+												<span class="list"><i class="xi-info-o pr5"></i>(사)한국중소기업발전협회</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-11-27</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-12-01</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2025-12-31</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 968</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175658_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="2025년 스타트업/중소기업 대상 기업성장 및 홍보 지원사업" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175658);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175658);" title="[2025년 스타트업/중소기업 대상 기업성장 및 홍보 지원사업 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type03">
+													시설ㆍ공간ㆍ보육</span>
+						
+												<span class="flag day">D-93</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175361);'>
+													<div class="tit_wrap">
+														<p class="tit">RIST 첨단제조인큐베이팅센터 입주기업 수시 모집 공고</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>RIST 첨단제조인큐베이팅센터 입주기업 수시 모집 공고</span>
+												<span class="list"><i class="xi-info-o pr5"></i>(재)포항산업과학연구원</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-11-14</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-10-23</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2026-03-20</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 375</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175361_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="RIST 첨단제조인큐베이팅센터 입주기업 수시 모집 공고" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175361);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175361);" title="[RIST 첨단제조인큐베이팅센터 입주기업 수시 모집 공고 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type01">
+													사업화</span>
+						
+												<span class="flag day">D-19</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175503);'>
+													<div class="tit_wrap">
+														<p class="tit">앤틀러코리아 스타트업 제너레이터 프로그램 8기 참여자 모집</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>앤틀러코리아 스타트업 제너레이터 프로그램 8기 참여자 모집</span>
+												<span class="list"><i class="xi-info-o pr5"></i>앤틀러코리아</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-11-11</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-11-07</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2026-01-05</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 2,080</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 민간</span>
+													<div id="175503_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="앤틀러코리아 스타트업 제너레이터 프로그램 8기 참여자 모집" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175503);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175503);" title="[앤틀러코리아 스타트업 제너레이터 프로그램 8기 참여자 모집 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							<li class="notice">
+									<!--공지글-->
+									<div class="inner">
+										<div class="right">
+											<div class="top">
+												<span class="flag type03">
+													시설ㆍ공간ㆍ보육</span>
+						
+												<span class="flag day">D-379</span>
+															<p class="date"></p>
+											</div>
+											<div class="middle">
+												<a href='javascript:go_view(175366);'>
+													<div class="tit_wrap">
+														<p class="tit">SK하이닉스청년창업파크 입주기업 모집(상시모집)</p>
+														</div>
+												</a>
+											</div>
+											<div class="bottom">
+												<span class="list"><i class="xi-info-o pr5"></i>SK하이닉스청년창업파크 입주기업 모집(상시모집)</span>
+												<span class="list"><i class="xi-info-o pr5"></i>서원대학교산학협력단</span>
+												<span class="list"><i class="xi-info-o pr5"></i>등록일자 2025-10-27</span>
+												<span class="list"><i class="xi-info-o pr5"></i>시작일자 2025-10-27</span>
+												<span class="list"><i class="xi-info-o pr5"></i>마감일자 2026-12-31</span>
+												<span class="list"><i class="xi-info-o pr5"></i>조회 1,287</span>
+											</div>
+										</div>
+										<div class="left">
+											<div class="left_inner">
+												<span class="flag_agency"> 교육</span>
+													<div id="175366_scrap_div">
+													<input type="hidden" name="scrap_list_bizPbancNm" value="SK하이닉스청년창업파크 입주기업 모집(상시모집)" />
+													<button title="스크랩 하기" class="btn_by-bk btn_myList" onclick='javascript:fnScrap(175366);' ><i class="xi-heart-o fz17 mt10"></i><span class="alt blind">스크랩</span></button>
+														</div>
+												<button class="btn_by-bk btn_Nwindow" onclick="javascript:go_view_blank(175366);" title="[SK하이닉스청년창업파크 입주기업 모집(상시모집) 새창열기" ><i class="xi-external-link"></i></button>
+											</div>
+										</div>
+									</div>
+								</li>
+							</ul>
+				<div class="paginate">
+					<a href="#none" class="active" title="현재 페이지">1</a><a href="#none" onclick="fn_egov_link_page(2); return false;" title="2 페이지로 이동">2</a>
+</div>
+			</div>
+		</div>
+	</div>
+</div></div>
 		</div>
 	</div>
 	</div>
@@ -2161,7 +3899,7 @@ jQuery(function(){
 			checkManual("user");
 			
 			 
-			var menuUrl = "";
+			var menuUrl = "bizpbanc-inquiry";
 			$("#container").removeClass();
 			if (menuUrl) {
 				$("." + menuUrl).addClass("on");
@@ -2203,8 +3941,8 @@ jQuery(function(){
 				ItgJs.sendSns('kakaotalk', shareURL, '')
 			}) */
 			
-			var schM = "list";
-			var menuCode = "";
+			var schM = "";
+			var menuCode = "bizpbanc-ongoing";
 			
 			if(schM == "view" || menuCode == "bizpbanc-deadline") {
 				$("#id_rss").hide();
@@ -2343,7 +4081,7 @@ jQuery(function(){
 							tab += "<li class=\"basic_item\"><a class\"basic_anchor\" href=\"/web/contents/"+data[i].menuCode+".do\">"+data[i].menuName+"</a></li>";
 						}
 						$("#tabMenuUl2").html(tab);
-						$("#tabMenuBtn2").text("");
+						$("#tabMenuBtn2").text("모집중");
 					}
 				},
 				error:function(request,status,error){
@@ -2457,7 +4195,7 @@ jQuery(function(){
 /*<![CDATA[ */
 	Kakao.init("4cd5bb57b6309321f613f7eb1424d1be");
 
-	var pgeTitle = "";
+	var pgeTitle = "&gt;K-Startup 창업지원포털&gt;사업공고&gt;모집중";
 	if (pgeTitle =='undefined' || pgeTitle == null || pgeTitle == '' ) {
 		if(document.title != "") {
 			pgeTitle  = document.title.split('>')[0];

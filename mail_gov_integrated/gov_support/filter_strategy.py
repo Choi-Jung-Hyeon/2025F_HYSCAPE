@@ -35,81 +35,87 @@ class FilterStrategy:
                         f"support={len(self.support_keywords)}, "
                         f"qual={len(self.qualification_keywords)}개 키워드")
 
-    def calculate_relevance(self, notice: Dict) -> int:
+    def calculate_relevance(self, notice: Dict, filter_type: str = 'B') -> int:
         """
-        공고의 관련도 점수 계산 (0-100점)
+        공고의 관련도 점수 계산 (개선 버전)
 
         채점 기준:
-        - tech_keywords 매칭: 30점/개
+        - 기본 점수: 5점 (모든 공고)
+        - tech_keywords 매칭: 20점/개 (완화)
         - support_keywords 매칭: 10점/개
-        - R&D/연구 카테고리: +15점
-        - 스타트업/창업 카테고리: +10점
+        - 카테고리 보너스: 5-20점 (대폭 강화)
 
         Args:
             notice: 공고 정보 딕셔너리
-                   (title, description, tags, organization 등 포함)
+            filter_type: 'A' (엄격) 또는 'B' (유연)
 
         Returns:
             int: 관련도 점수 (0-100점)
         """
-        score = 0
-        matched_keywords = {
-            'tech': [],
-            'support': [],
-            'qualification': []
+        title = notice.get('title', '').lower()
+        description = notice.get('description', '').lower()
+        tags = ' '.join(notice.get('tags', [])).lower()
+        organization = notice.get('organization', '').lower()
+
+        search_text = f"{title} {description} {tags} {organization}"
+
+        # 기본 점수 (모든 공고에 최소 5점)
+        score = 5
+
+        # 1. 기술 키워드 매칭 (가중치 낮춤: 30 → 20)
+        tech_matches = sum(1 for kw in self.tech_keywords if kw.lower() in search_text)
+        score += tech_matches * 20
+
+        # 2. 지원 키워드 매칭
+        support_matches = sum(1 for kw in self.support_keywords if kw.lower() in search_text)
+        score += support_matches * 10
+
+        # 3. 자격 키워드 매칭 (보너스)
+        qualification_matches = sum(1 for kw in self.qualification_keywords if kw.lower() in search_text)
+        score += qualification_matches * 5
+
+        # 4. 카테고리 보너스 점수 (대폭 강화)
+        category_bonuses = {
+            '창업': 20,
+            '스타트업': 20,
+            '벤처': 15,
+            'r&d': 15,
+            '연구': 15,
+            '기술': 10,
+            '사업화': 10,
+            '실증': 10,
+            '시설': 5,
+            '공간': 5,
+            '보육': 5,
+            '중소기업': 10,
+            '지원금': 8,
+            '보조금': 8
         }
 
-        # 검색 대상 텍스트 결합 (제목 + 설명 + 태그 + 기관명)
-        search_text = ' '.join([
-            notice.get('title', ''),
-            notice.get('description', ''),
-            ' '.join(notice.get('tags', [])),
-            notice.get('organization', '')
-        ]).lower()
+        for keyword, bonus in category_bonuses.items():
+            if keyword in search_text:
+                score += bonus
+                break  # 하나만 적용
 
-        # 1. tech_keywords 매칭: 30점/개
-        for keyword in self.tech_keywords:
-            if keyword.lower() in search_text:
-                score += 30
-                matched_keywords['tech'].append(keyword)
-
-        # 2. support_keywords 매칭: 10점/개
-        for keyword in self.support_keywords:
-            if keyword.lower() in search_text:
-                score += 10
-                matched_keywords['support'].append(keyword)
-
-        # 3. qualification_keywords 매칭: 5점/개 (보너스)
-        for keyword in self.qualification_keywords:
-            if keyword.lower() in search_text:
-                score += 5
-                matched_keywords['qualification'].append(keyword)
-
-        # 4. R&D/연구 카테고리: +15점
-        rd_keywords = ['r&d', 'r＆d', '연구개발', '연구 개발', '연구', '개발과제']
-        if any(kw in search_text for kw in rd_keywords):
-            score += 15
-
-        # 5. 스타트업/창업 카테고리: +10점
-        startup_keywords = ['스타트업', '창업', 'startup', '초기기업', '벤처']
-        if any(kw in search_text for kw in startup_keywords):
-            score += 10
+        # 5. Type A (엄격) 필터링: 기술 키워드 필수
+        if filter_type == 'A' and tech_matches == 0:
+            return 0
 
         # 최대 100점으로 제한
         score = min(score, 100)
 
-        # 매칭된 키워드 정보 로깅
-        if score > 0:
-            self.logger.debug(f"[{score}점] {notice['title'][:30]}... | "
-                            f"tech={matched_keywords['tech']}, "
-                            f"support={matched_keywords['support']}")
+        # 매칭 정보 로깅
+        if score >= 10:
+            self.logger.debug(f"[{score}점] {notice.get('title', '')[:40]}... | "
+                            f"tech={tech_matches}, support={support_matches}")
 
         return score
 
     def filter_notices(
         self,
         notices: List[Dict],
-        min_score: int = 30,
+        filter_type: str = 'B',
+        min_score: int = 10,
         top_n: int = 5
     ) -> List[Dict]:
         """
@@ -117,7 +123,8 @@ class FilterStrategy:
 
         Args:
             notices: 공고 딕셔너리 리스트
-            min_score: 최소 점수 (이 점수 이상만 포함)
+            filter_type: 'A' (엄격) 또는 'B' (유연)
+            min_score: 최소 점수 (기본값 10으로 완화)
             top_n: 반환할 최대 개수
 
         Returns:
@@ -127,7 +134,7 @@ class FilterStrategy:
         # 각 공고에 관련도 점수 계산 및 추가
         scored_notices = []
         for notice in notices:
-            score = self.calculate_relevance(notice)
+            score = self.calculate_relevance(notice, filter_type=filter_type)
             if score >= min_score:
                 notice_with_score = notice.copy()
                 notice_with_score['relevance_score'] = score

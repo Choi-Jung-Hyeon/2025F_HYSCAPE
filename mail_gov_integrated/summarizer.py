@@ -3,6 +3,8 @@
 Gemini API를 이용한 기사 요약 모듈
 """
 
+import time
+import logging
 import google.generativeai as genai
 from config import (
     GOOGLE_API_KEY,
@@ -13,38 +15,59 @@ from config import (
 )
 
 genai.configure(api_key=GOOGLE_API_KEY)
+logger = logging.getLogger(__name__)
 
-def get_summary_and_keywords(content, article_title):
-    """Gemini API로 기사 요약"""
+def get_summary_and_keywords(content, article_title, max_retries=3):
+    """Gemini API로 기사 요약 (재시도 로직 포함)"""
     prompt = SUMMARY_PROMPT_TEMPLATE.format(
         title=article_title,
         content=content[:4000],
         company_keywords=", ".join(TARGET_COMPANIES[:15]),
         tech_keywords=", ".join(TARGET_KEYWORDS_TECH[:10])
     )
-    
-    try:
-        model = genai.GenerativeModel(GEMINI_MODEL)
-        response = model.generate_content(prompt)
 
-        summary = response.text.strip()
-        matched_keywords = extract_matched_keywords(content, article_title)
+    for attempt in range(max_retries):
+        try:
+            model = genai.GenerativeModel(GEMINI_MODEL)
+            response = model.generate_content(prompt)
 
-        return {
-            'summary': summary,
-            'matched_keywords': matched_keywords,
-            'has_company': any(k in matched_keywords for k in TARGET_COMPANIES),
-            'has_tech': any(k in matched_keywords for k in TARGET_KEYWORDS_TECH)
-        }
+            summary = response.text.strip()
+            matched_keywords = extract_matched_keywords(content, article_title)
 
-    except Exception as e:
-        print(f"    요약 실패: {e}")
-        return {
-            'summary': "요약 실패",
-            'matched_keywords': [],
-            'has_company': False,
-            'has_tech': False
-        }
+            return {
+                'summary': summary,
+                'matched_keywords': matched_keywords,
+                'has_company': any(k in matched_keywords for k in TARGET_COMPANIES),
+                'has_tech': any(k in matched_keywords for k in TARGET_KEYWORDS_TECH)
+            }
+
+        except Exception as e:
+            error_str = str(e)
+            # API 할당량 초과 (429 에러)
+            if '429' in error_str or 'quota' in error_str.lower():
+                if attempt < max_retries - 1:
+                    wait_time = 60  # 1분 대기
+                    logger.warning(f"API 할당량 초과, {wait_time}초 대기 후 재시도... ({attempt + 1}/{max_retries})")
+                    time.sleep(wait_time)
+                    continue
+                else:
+                    logger.error(f"API 할당량 초과로 요약 실패: {e}")
+            else:
+                logger.error(f"요약 실패: {e}")
+
+            return {
+                'summary': "요약 실패 (API 할당량 초과 또는 오류)",
+                'matched_keywords': [],
+                'has_company': False,
+                'has_tech': False
+            }
+
+    return {
+        'summary': "요약 실패 (최대 재시도 횟수 초과)",
+        'matched_keywords': [],
+        'has_company': False,
+        'has_tech': False
+    }
 
 def extract_matched_keywords(content, title):
     """기사 제목 + 본문에서 Target 키워드 추출"""
