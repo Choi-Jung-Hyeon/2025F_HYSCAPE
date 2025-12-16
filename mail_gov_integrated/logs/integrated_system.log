@@ -1,0 +1,197 @@
+2025-12-17 00:55:22,725 - __main__ - INFO - 
+[1/5] PDF 브리핑 처리 중...
+2025-12-17 00:55:22,727 - __main__ - INFO - ✓ PDF 브리핑 처리 완료
+2025-12-17 00:55:22,727 - __main__ - INFO - 
+[2/5] 정부지원사업 추천 수집 중...
+2025-12-17 00:55:22,733 - gov_support.filter_strategy - INFO - 필터 전략 초기화: tech=9, support=9, qual=8개 키워드
+2025-12-17 00:55:22,734 - gov_support.gov_support_manager - INFO - [k_startup] 스크래퍼 초기화 완료
+2025-12-17 00:55:22,734 - gov_support.gov_support_manager - WARNING - [iris] 스크래퍼 미구현 - 건너뜀
+2025-12-17 00:55:22,734 - gov_support.gov_support_manager - WARNING - [bizinfo] 스크래퍼 미구현 - 건너뜀
+2025-12-17 00:55:22,734 - gov_support.gov_support_manager - INFO - GovSupportManager 초기화: 1개 스크래퍼 활성화
+2025-12-17 00:55:22,734 - gov_support.gov_support_manager - INFO - ============================================================
+2025-12-17 00:55:22,734 - gov_support.gov_support_manager - INFO - 정부지원사업 공고 수집 시작
+2025-12-17 00:55:22,734 - gov_support.gov_support_manager - INFO - ============================================================
+2025-12-17 00:55:22,734 - gov_support.gov_support_manager - INFO - 
+[k_startup] 크롤링 시작...
+2025-12-17 00:55:22,734 - Scraper.K-Startup - INFO - [K-Startup] 크롤링 시작...
+2025-12-17 00:55:22,734 - Scraper.K-Startup - INFO - 페이지 1/3 크롤링 중...
+2025-12-17 00:55:22,928 - Scraper.K-Startup - INFO - 🐛 디버그 HTML 저장: debug_kstartup_page1.html
+2025-12-17 00:55:23,025 - Scraper.K-Startup - WARNING - ⚠️ 공고 목록을 찾을 수 없습니다. HTML 구조 확인 필요
+2025-12-17 00:55:23,026 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:55:23,026 - Scraper.K-Startup - INFO - 🐛 HTML 구조 디버깅
+2025-12-17 00:55:23,026 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:55:23,029 - Scraper.K-Startup - INFO -   ul: 37개
+2025-12-17 00:55:23,040 - Scraper.K-Startup - INFO -   전체 링크(<a>): 140개
+2025-12-17 00:55:23,041 - Scraper.K-Startup - INFO -   링크 샘플: 본문 바로가기
+2025-12-17 00:55:23,041 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:55:23,042 - Scraper.K-Startup - INFO - 💡 debug_kstartup_page1.html 파일을 열어서 구조를 확인하세요!
+2025-12-17 00:55:23,042 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:55:23,042 - Scraper.K-Startup - INFO - 페이지 1: 0개 공고 수집
+2025-12-17 00:55:24,043 - Scraper.K-Startup - INFO - 페이지 2/3 크롤링 중...
+2025-12-17 00:55:24,272 - Scraper.K-Startup - WARNING - ⚠️ 공고 목록을 찾을 수 없습니다. HTML 구조 확인 필요
+2025-12-17 00:55:24,272 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:55:24,273 - Scraper.K-Startup - INFO - 🐛 HTML 구조 디버깅
+2025-12-17 00:55:24,273 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:55:24,278 - Scraper.K-Startup - INFO -   ul: 37개
+2025-12-17 00:55:24,289 - Scraper.K-Startup - INFO -   전체 링크(<a>): 140개
+2025-12-17 00:55:24,289 - Scraper.K-Startup - INFO -   링크 샘플: 본문 바로가기
+2025-12-17 00:55:24,290 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:55:24,290 - Scraper.K-Startup - INFO - 💡 debug_kstartup_page1.html 파일을 열어서 구조를 확인하세요!
+2025-12-17 00:55:24,290 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:55:24,290 - Scraper.K-Startup - INFO - 페이지 2: 0개 공고 수집
+2025-12-17 00:55:25,291 - Scraper.K-Startup - INFO - 페이지 3/3 크롤링 중...
+2025-12-17 00:55:25,514 - Scraper.K-Startup - WARNING - ⚠️ 공고 목록을 찾을 수 없습니다. HTML 구조 확인 필요
+2025-12-17 00:55:25,515 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:55:25,515 - Scraper.K-Startup - INFO - 🐛 HTML 구조 디버깅
+2025-12-17 00:55:25,515 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:55:25,518 - Scraper.K-Startup - INFO -   ul: 37개
+2025-12-17 00:55:25,524 - Scraper.K-Startup - INFO -   전체 링크(<a>): 140개
+2025-12-17 00:55:25,525 - Scraper.K-Startup - INFO -   링크 샘플: 본문 바로가기
+2025-12-17 00:55:25,525 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:55:25,525 - Scraper.K-Startup - INFO - 💡 debug_kstartup_page1.html 파일을 열어서 구조를 확인하세요!
+2025-12-17 00:55:25,525 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:55:25,525 - Scraper.K-Startup - INFO - 페이지 3: 0개 공고 수집
+2025-12-17 00:55:26,526 - Scraper.K-Startup - INFO - [K-Startup] 0개 공고 발견
+2025-12-17 00:55:26,527 - Scraper.K-Startup - INFO - [K-Startup] 0개 공고 파싱 완료
+2025-12-17 00:55:26,527 - gov_support.gov_support_manager - INFO - [k_startup] 0개 공고 수집 완료
+2025-12-17 00:55:26,527 - gov_support.gov_support_manager - INFO - ============================================================
+2025-12-17 00:55:26,527 - gov_support.gov_support_manager - INFO - 전체 수집 완료: 총 0개 공고
+2025-12-17 00:55:26,528 - gov_support.gov_support_manager - INFO - ============================================================
+2025-12-17 00:55:26,528 - gov_support.gov_support_manager - WARNING - 수집된 공고가 없습니다.
+2025-12-17 00:55:26,528 - __main__ - INFO - ✓ 정부지원사업 추천 완료
+2025-12-17 00:55:26,528 - __main__ - INFO - 
+[3/5] 수소 뉴스 수집 중...
+2025-12-17 00:55:26,528 - __main__ - ERROR - ✗ 뉴스 수집 실패: FetcherManager.__init__() takes 1 positional argument but 2 were given
+Traceback (most recent call last):
+  File "/home/fourmi103/2025F_HYSCAPE/mail_gov_integrated/main.py", line 213, in main
+    fetcher_manager = FetcherManager(config)
+                      ^^^^^^^^^^^^^^^^^^^^^^
+TypeError: FetcherManager.__init__() takes 1 positional argument but 2 were given
+2025-12-17 00:55:26,529 - __main__ - INFO - 
+[4/5] 기사 본문 추출 및 AI 요약 중...
+2025-12-17 00:55:26,529 - __main__ - INFO - ✓ 0개 기사 요약 완료
+2025-12-17 00:55:26,530 - __main__ - INFO - 
+[5/5] 이메일 생성 및 발송 중...
+2025-12-17 00:55:31,726 - __main__ - INFO - ✓ 이메일 발송 완료!
+2025-12-17 00:59:37,836 - __main__ - INFO - 
+[1/5] PDF 브리핑 처리 중...
+2025-12-17 00:59:37,837 - __main__ - INFO - ✓ PDF 브리핑 처리 완료
+2025-12-17 00:59:37,837 - __main__ - INFO - 
+[2/5] 정부지원사업 추천 수집 중...
+2025-12-17 00:59:37,847 - gov_support.filter_strategy - INFO - 필터 전략 초기화: tech=9, support=9, qual=8개 키워드
+2025-12-17 00:59:37,847 - gov_support.gov_support_manager - INFO - [k_startup] 스크래퍼 초기화 완료
+2025-12-17 00:59:37,847 - gov_support.gov_support_manager - WARNING - [iris] 스크래퍼 미구현 - 건너뜀
+2025-12-17 00:59:37,847 - gov_support.gov_support_manager - WARNING - [bizinfo] 스크래퍼 미구현 - 건너뜀
+2025-12-17 00:59:37,847 - gov_support.gov_support_manager - INFO - GovSupportManager 초기화: 1개 스크래퍼 활성화
+2025-12-17 00:59:37,847 - gov_support.gov_support_manager - INFO - ============================================================
+2025-12-17 00:59:37,847 - gov_support.gov_support_manager - INFO - 정부지원사업 공고 수집 시작
+2025-12-17 00:59:37,847 - gov_support.gov_support_manager - INFO - ============================================================
+2025-12-17 00:59:37,847 - gov_support.gov_support_manager - INFO - 
+[k_startup] 크롤링 시작...
+2025-12-17 00:59:37,847 - Scraper.K-Startup - INFO - [K-Startup] 크롤링 시작...
+2025-12-17 00:59:37,847 - Scraper.K-Startup - INFO - 페이지 1/3 크롤링 중...
+2025-12-17 00:59:38,018 - Scraper.K-Startup - INFO - 🐛 디버그 HTML 저장: debug_kstartup_page1.html
+2025-12-17 00:59:38,083 - Scraper.K-Startup - WARNING - ⚠️ 공고 목록을 찾을 수 없습니다. HTML 구조 확인 필요
+2025-12-17 00:59:38,083 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:59:38,083 - Scraper.K-Startup - INFO - 🐛 HTML 구조 디버깅
+2025-12-17 00:59:38,083 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:59:38,086 - Scraper.K-Startup - INFO -   ul: 37개
+2025-12-17 00:59:38,095 - Scraper.K-Startup - INFO -   전체 링크(<a>): 140개
+2025-12-17 00:59:38,097 - Scraper.K-Startup - INFO -   링크 샘플: 본문 바로가기
+2025-12-17 00:59:38,097 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:59:38,097 - Scraper.K-Startup - INFO - 💡 debug_kstartup_page1.html 파일을 열어서 구조를 확인하세요!
+2025-12-17 00:59:38,097 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:59:38,098 - Scraper.K-Startup - INFO - 페이지 1: 0개 공고 수집
+2025-12-17 00:59:39,098 - Scraper.K-Startup - INFO - 페이지 2/3 크롤링 중...
+2025-12-17 00:59:39,359 - Scraper.K-Startup - WARNING - ⚠️ 공고 목록을 찾을 수 없습니다. HTML 구조 확인 필요
+2025-12-17 00:59:39,360 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:59:39,360 - Scraper.K-Startup - INFO - 🐛 HTML 구조 디버깅
+2025-12-17 00:59:39,360 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:59:39,365 - Scraper.K-Startup - INFO -   ul: 37개
+2025-12-17 00:59:39,372 - Scraper.K-Startup - INFO -   전체 링크(<a>): 140개
+2025-12-17 00:59:39,372 - Scraper.K-Startup - INFO -   링크 샘플: 본문 바로가기
+2025-12-17 00:59:39,372 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:59:39,372 - Scraper.K-Startup - INFO - 💡 debug_kstartup_page1.html 파일을 열어서 구조를 확인하세요!
+2025-12-17 00:59:39,372 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:59:39,372 - Scraper.K-Startup - INFO - 페이지 2: 0개 공고 수집
+2025-12-17 00:59:40,373 - Scraper.K-Startup - INFO - 페이지 3/3 크롤링 중...
+2025-12-17 00:59:40,637 - Scraper.K-Startup - WARNING - ⚠️ 공고 목록을 찾을 수 없습니다. HTML 구조 확인 필요
+2025-12-17 00:59:40,639 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:59:40,639 - Scraper.K-Startup - INFO - 🐛 HTML 구조 디버깅
+2025-12-17 00:59:40,639 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:59:40,643 - Scraper.K-Startup - INFO -   ul: 37개
+2025-12-17 00:59:40,651 - Scraper.K-Startup - INFO -   전체 링크(<a>): 140개
+2025-12-17 00:59:40,651 - Scraper.K-Startup - INFO -   링크 샘플: 본문 바로가기
+2025-12-17 00:59:40,651 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:59:40,651 - Scraper.K-Startup - INFO - 💡 debug_kstartup_page1.html 파일을 열어서 구조를 확인하세요!
+2025-12-17 00:59:40,651 - Scraper.K-Startup - INFO - ============================================================
+2025-12-17 00:59:40,651 - Scraper.K-Startup - INFO - 페이지 3: 0개 공고 수집
+2025-12-17 00:59:41,655 - Scraper.K-Startup - INFO - [K-Startup] 0개 공고 발견
+2025-12-17 00:59:41,656 - Scraper.K-Startup - INFO - [K-Startup] 0개 공고 파싱 완료
+2025-12-17 00:59:41,656 - gov_support.gov_support_manager - INFO - [k_startup] 0개 공고 수집 완료
+2025-12-17 00:59:41,657 - gov_support.gov_support_manager - INFO - ============================================================
+2025-12-17 00:59:41,657 - gov_support.gov_support_manager - INFO - 전체 수집 완료: 총 0개 공고
+2025-12-17 00:59:41,657 - gov_support.gov_support_manager - INFO - ============================================================
+2025-12-17 00:59:41,657 - gov_support.gov_support_manager - WARNING - 수집된 공고가 없습니다.
+2025-12-17 00:59:41,657 - __main__ - INFO - ✓ 정부지원사업 추천 완료
+2025-12-17 00:59:41,657 - __main__ - INFO - 
+[3/5] 수소 뉴스 수집 중...
+2025-12-17 00:59:41,658 - SourceFetcherFactory - INFO - ✅ 월간수소경제 Fetcher 생성 완료
+2025-12-17 00:59:41,658 - SourceFetcherFactory - INFO - ✅ Hydrogen Central Fetcher 생성 완료
+2025-12-17 00:59:41,658 - SourceFetcherFactory - INFO - ✅ Fuel Cells Works Fetcher 생성 완료
+2025-12-17 00:59:41,659 - SourceFetcherFactory - INFO - ✅ H2 Energy News Fetcher 생성 완료
+2025-12-17 00:59:41,659 - SourceFetcherFactory - INFO - ✅ Hydrogen Fuel News Fetcher 생성 완료
+2025-12-17 00:59:41,659 - SourceFetcherFactory - INFO - ✅ H2-international Fetcher 생성 완료
+2025-12-17 00:59:41,659 - SourceFetcherFactory - INFO - ✅ 네이버뉴스 Fetcher 생성 완료
+2025-12-17 00:59:41,660 - SourceFetcherFactory - INFO - 
+📦 총 7개 Fetcher 등록 완료
+2025-12-17 00:59:41,660 - SourceFetcherFactory - INFO - 
+======================================================================
+2025-12-17 00:59:41,660 - SourceFetcherFactory - INFO - 📰 전체 소스 수집 시작
+2025-12-17 00:59:41,660 - SourceFetcherFactory - INFO - ======================================================================
+2025-12-17 00:59:41,660 - Fetcher.월간수소경제 - INFO - RSS 피드 수집 시작: http://www.h2news.kr/rss/S1N1.xml
+2025-12-17 00:59:41,779 - Fetcher.월간수소경제 - INFO - ✅ 월간수소경제: 5개 기사 수집 성공
+2025-12-17 00:59:41,780 - Fetcher.Hydrogen Central - INFO - RSS 피드 수집 시작: https://hydrogen-central.com/feed/
+2025-12-17 00:59:43,984 - Fetcher.Hydrogen Central - INFO - ✅ Hydrogen Central: 5개 기사 수집 성공
+2025-12-17 00:59:43,985 - Fetcher.Fuel Cells Works - INFO - RSS 피드 수집 시작: https://fuelcellsworks.com/feed/
+2025-12-17 00:59:45,563 - Fetcher.Fuel Cells Works - INFO - ✅ Fuel Cells Works: 5개 기사 수집 성공
+2025-12-17 00:59:45,566 - Fetcher.H2 Energy News - INFO - RSS 피드 수집 시작: https://www.h2-view.com/feed/
+2025-12-17 00:59:46,827 - Fetcher.H2 Energy News - WARNING - RSS 피드에 기사가 없습니다: https://www.h2-view.com/feed/
+2025-12-17 00:59:46,827 - Fetcher.Hydrogen Fuel News - INFO - RSS 피드 수집 시작: https://www.hydrogenfuelnews.com/feed/
+2025-12-17 00:59:48,394 - Fetcher.Hydrogen Fuel News - INFO - ✅ Hydrogen Fuel News: 5개 기사 수집 성공
+2025-12-17 00:59:48,395 - Fetcher.H2-international - INFO - RSS 피드 수집 시작: https://www.h2-international.com/feed/
+2025-12-17 00:59:51,680 - Fetcher.H2-international - INFO - ✅ H2-international: 5개 기사 수집 성공
+2025-12-17 00:59:51,680 - SourceFetcherFactory - INFO - 
+📊 총 25개 기사 수집 완료 (중복 제거 후)
+2025-12-17 00:59:51,680 - __main__ - INFO - ✓ 총 25개 기사 수집 완료
+2025-12-17 00:59:51,680 - __main__ - INFO - 
+[4/5] 기사 본문 추출 및 AI 요약 중...
+2025-12-17 00:59:51,680 - __main__ - INFO -   [1/25] 美 유타주 석탄발전소 가동 정지에도 “청정수소 전환은 가시밭길”...
+2025-12-17 00:59:52,019 - __main__ - INFO -   [2/25] 암모니아 혼소 발전 퇴출로 ‘전소 가스터빈’ 개발 가속...
+2025-12-17 00:59:52,273 - __main__ - INFO -   [3/25] 고비사막 바람으로 암모니아 생산, 미래의 유전 확보한 엔비전에너지...
+2025-12-17 00:59:52,506 - __main__ - INFO -   [4/25] 수소위원회 “청정수소 사업 실행 단계 진입···정책 집행 시급”...
+2025-12-17 00:59:52,750 - __main__ - INFO -   [5/25] 올해 혁신 기술로 비티이의 연료전지 발전기 ‘GEN100’ 선정...
+2025-12-17 00:59:52,934 - __main__ - INFO -   [6/25] Lummus Technology and Advanced Ionics Break Ground...
+2025-12-17 00:59:54,779 - __main__ - INFO -   [7/25] Hong Kong – Four more trial projects on hydrogen f...
+2025-12-17 00:59:56,220 - __main__ - INFO -   [8/25] HYDROGEN REFUELING SOLUTIONS – HRS ANNOUNCES EUR 8...
+2025-12-17 00:59:57,572 - __main__ - INFO -   [9/25] Nel ASA – Strengthens its industry leadership as t...
+2025-12-17 00:59:59,121 - __main__ - INFO -   [10/25] HyOrc & Zeltech Advance Practical Locomotive Retro...
+2025-12-17 01:00:01,979 - __main__ - INFO -   [11/25] HKU Engineering Team Unveils Self-Protecting Catal...
+2025-12-17 01:00:02,805 - __main__ - INFO -   [12/25] Cagliari’s CTM to Deploy First Hydrogen Buses by W...
+2025-12-17 01:00:06,199 - __main__ - INFO -   [13/25] Firm Secures Sustainable Aviation Fuel Project Con...
+2025-12-17 01:00:09,086 - __main__ - INFO -   [14/25] Lummus Technology and Advanced Ionics Break Ground...
+2025-12-17 01:00:11,778 - __main__ - INFO -   [15/25] Milestone Reached in Hydrogen Storage: Local Firm ...
+2025-12-17 01:00:13,657 - __main__ - INFO -   [16/25] VERDE HYDROGEN: Advancing Large-Scale Hydrogen Pro...
+2025-12-17 01:00:14,546 - __main__ - INFO -   [17/25] ACWA Power China: Saudi Giant Ushers in Green Hydr...
+2025-12-17 01:00:15,468 - __main__ - INFO -   [18/25] Hydrogen Fuel Cells Propel China’s Tianmushan-1 Dr...
+2025-12-17 01:00:16,305 - __main__ - INFO -   [19/25] Penspen and National Gas Transmission Launch Study...
+2025-12-17 01:00:17,065 - __main__ - INFO -   [20/25] Hydrogen Fuel Cells Reach Megawatt Scale for Large...
+2025-12-17 01:00:17,891 - __main__ - INFO -   [21/25] Investor Palladio Partners Joins Hylane...
+2025-12-17 01:00:20,241 - __main__ - INFO -   [22/25] Gascade puts 400 kilometres of hydrogen pipeline i...
+2025-12-17 01:00:22,522 - __main__ - INFO -   [23/25] Methanol Reformer supplies methanol reformer to Mi...
+2025-12-17 01:00:25,241 - __main__ - INFO -   [24/25] Trafag introduces pressure transmitter for Ex zone...
+2025-12-17 01:00:27,772 - __main__ - INFO -   [25/25] IREC launches 3D printing pilot line for SOC cells...
+2025-12-17 01:00:30,391 - __main__ - INFO - ✓ 25개 기사 요약 완료
+2025-12-17 01:00:30,392 - __main__ - INFO - 
+[5/5] 이메일 생성 및 발송 중...
+2025-12-17 01:00:35,722 - __main__ - INFO - ✓ 이메일 발송 완료!
