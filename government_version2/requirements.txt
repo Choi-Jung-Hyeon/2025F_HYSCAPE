@@ -1,0 +1,27 @@
+# 정부 지원 사업 추천 시스템 - 필수 패키지
+
+# 웹 크롤링
+requests==2.31.0
+beautifulsoup4==4.12.2
+lxml==4.9.3
+
+# 동적 페이지 크롤링 (필요시)
+selenium==4.15.0
+webdriver-manager==4.0.1
+
+# 설정 파일 관리
+PyYAML==6.0.1
+
+# 데이터 처리
+pandas==2.1.3
+
+# Slack 알림
+slack-sdk==3.23.0
+
+# 로깅 및 유틸리티
+python-dateutil==2.8.2
+pytz==2023.3
+
+# 테스트 (선택사항)
+pytest==7.4.3
+pytest-cov==4.1.0
