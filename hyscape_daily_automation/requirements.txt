@@ -1,0 +1,22 @@
+# Hyscape Daily Automation - Unified Dependencies
+
+# ===== AI & API =====
+google-generativeai==0.8.3
+
+# ===== PDF Processing =====
+pdfplumber==0.11.0          # Primary (from notion_version3)
+PyPDF2==3.0.1               # Fallback (from mail_gov_integrated)
+
+# ===== Web Scraping & HTTP =====
+requests==2.31.0
+beautifulsoup4==4.12.3
+feedparser==6.0.11          # RSS parsing
+lxml>=5.1.0                 # Updated to version with pre-built wheels
+
+# ===== Notion Integration =====
+notion-client==2.2.1
+
+# ===== Configuration & Utilities =====
+PyYAML==6.0.1              # For config.yaml
+python-dateutil==2.8.2
+python-dotenv==1.0.0       # For .env file management

@@ -1,0 +1,44 @@
+# ===================================================================
+# Hyscape Daily Automation - Git Ignore Rules
+# ===================================================================
+
+# ===== Secrets & Credentials =====
+.env
+*.env
+.env.*
+!.env.template
+
+# ===== Python =====
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+
+# ===== Logs =====
+logs/
+*.log
+
+# ===== IDE =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ===== OS =====
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===== Temporary Files =====
+*.tmp
+*.bak
+*.cache
+debug_*.html
