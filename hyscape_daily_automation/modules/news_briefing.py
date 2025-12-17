@@ -23,6 +23,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'dependencies')
 from source_fetcher.factory import SourceFetcherFactory
 from content_scraper import get_and_clean_article_content
 from notifier import send_email
+from gov_support.gov_support_manager import GovSupportManager
 
 # Import from shared utilities
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
@@ -57,21 +58,25 @@ def run() -> Dict:
         date_str = today.strftime(config.DATE_FORMAT)
 
         # Step 1: Process PDF briefings
-        logger.info("[NewsBriefing] Step 1/4: Processing PDF briefings...")
+        logger.info("[NewsBriefing] Step 1/5: Processing PDF briefings...")
         pdf_summary_html = _process_pdf_briefings(gemini_client)
 
-        # Step 2: Collect news articles
-        logger.info("[NewsBriefing] Step 2/4: Collecting news articles...")
+        # Step 2: Get government support recommendations
+        logger.info("[NewsBriefing] Step 2/5: Getting government support recommendations...")
+        gov_support_html = _get_gov_support_recommendations()
+
+        # Step 3: Collect news articles
+        logger.info("[NewsBriefing] Step 3/5: Collecting news articles...")
         articles = _collect_news_articles()
 
-        # Step 3: Summarize articles
-        logger.info("[NewsBriefing] Step 3/4: Summarizing articles...")
+        # Step 4: Summarize articles
+        logger.info("[NewsBriefing] Step 4/5: Summarizing articles...")
         summarized_articles = _summarize_articles(articles, gemini_client)
 
-        # Step 4: Send email
-        logger.info("[NewsBriefing] Step 4/4: Sending email...")
+        # Step 5: Send email
+        logger.info("[NewsBriefing] Step 5/5: Sending email...")
         news_html = _generate_news_html(summarized_articles)
-        email_html = _build_email_html(pdf_summary_html, news_html, date_str)
+        email_html = _build_email_html(pdf_summary_html, gov_support_html, news_html, date_str)
 
         success = send_email(
             subject=config.EMAIL_SUBJECT_TEMPLATE.format(date=date_str),
@@ -181,6 +186,84 @@ def _process_pdf_briefings(gemini_client: GeminiClient) -> str:
         <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-radius: 8px;">
             <h2 style="color: #856404;">⚠️ PDF 브리핑</h2>
             <p style="color: #856404;">PDF 브리핑 처리 중 오류가 발생했습니다.</p>
+        </div>
+        """
+
+
+def _get_gov_support_recommendations() -> str:
+    """
+    Get government support program recommendations
+
+    Returns:
+        HTML section for government support recommendations
+    """
+    try:
+        # Initialize manager with config file
+        config_yaml_path = os.path.join(os.path.dirname(__file__), '..', 'config_production.yaml')
+        manager = GovSupportManager(config_yaml_path)
+
+        # Collect and filter notices
+        manager.collect_all_notices()
+        manager.apply_filters()
+
+        # Get top 3 recommendations
+        recommendations = manager.get_top_recommendations(top_n=3)
+
+        if not recommendations:
+            return """
+            <div style="margin: 20px 0; padding: 20px; background-color: white; border-radius: 8px;">
+                <h2 style="color: #2c3e50;">🏛️ 정부지원사업 추천</h2>
+                <p style="color: #7f8c8d;">추천할 정부지원사업이 없습니다.</p>
+            </div>
+            """
+
+        # Generate HTML
+        html_parts = [
+            '<div style="margin: 20px 0;">',
+            '  <h2 style="color: #2c3e50; border-bottom: 3px solid #e74c3c; padding-bottom: 10px;">',
+            '    🏛️ 정부지원사업 추천',
+            '  </h2>',
+            f'  <p style="color: #7f8c8d; margin: 10px 0;">추천 정부지원사업 {len(recommendations)}건</p>',
+        ]
+
+        for i, notice in enumerate(recommendations, 1):
+            score = notice.get('score', 0)
+            title = notice.get('title', '제목 없음')
+            url = notice.get('url', '#')
+            source = notice.get('source', '출처 미상')
+            period = notice.get('period', '')
+
+            notice_html = f"""
+  <div style="margin: 15px 0; padding: 20px; background-color: white; border-radius: 8px;
+              border-left: 4px solid #e74c3c; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+    <h3 style="margin: 0 0 10px 0; color: #2c3e50; font-size: 18px;">
+      <a href="{url}" style="color: #2c3e50; text-decoration: none;">{i}. {title}</a>
+    </h3>
+
+    <div style="margin: 10px 0; padding: 8px; background-color: #f8f9fa; border-radius: 4px;">
+      <span style="color: #7f8c8d; font-size: 13px;">📌 {source}</span>
+      {f'<span style="color: #95a5a6; font-size: 13px; margin-left: 15px;">📅 {period}</span>' if period else ''}
+      <span style="color: #e74c3c; font-size: 13px; margin-left: 15px; font-weight: bold;">⭐ 관련도: {score}점</span>
+    </div>
+
+    <div style="margin-top: 10px;">
+      <a href="{url}" style="color: #e74c3c; text-decoration: none; font-weight: bold; font-size: 14px;">
+        자세히 보기 →
+      </a>
+    </div>
+  </div>
+"""
+            html_parts.append(notice_html)
+
+        html_parts.append('</div>')
+        return '\n'.join(html_parts)
+
+    except Exception as e:
+        logger.warning(f"[NewsBriefing] Government support recommendation failed: {e}")
+        return """
+        <div style="margin: 20px 0; padding: 20px; background-color: #fff3cd; border-radius: 8px;">
+            <h2 style="color: #856404;">⚠️ 정부지원사업 추천</h2>
+            <p style="color: #856404;">정부지원사업 수집 중 오류가 발생했습니다.</p>
         </div>
         """
 
@@ -309,12 +392,13 @@ def _generate_news_html(articles: List[Dict]) -> str:
     return '\n'.join(html_parts)
 
 
-def _build_email_html(pdf_summary: str, news_html: str, date_str: str) -> str:
+def _build_email_html(pdf_summary: str, gov_support_html: str, news_html: str, date_str: str) -> str:
     """
     Build complete email HTML
 
     Args:
         pdf_summary: PDF summary HTML section
+        gov_support_html: Government support recommendations HTML section
         news_html: News HTML section
         date_str: Date string
 
@@ -339,6 +423,9 @@ def _build_email_html(pdf_summary: str, news_html: str, date_str: str) -> str:
 
     <!-- PDF Summary Section -->
     {pdf_summary}
+
+    <!-- Government Support Section -->
+    {gov_support_html}
 
     <!-- News Section -->
     {news_html}
