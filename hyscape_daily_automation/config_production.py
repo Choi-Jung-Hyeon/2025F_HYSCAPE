@@ -188,12 +188,17 @@ NEWS_SOURCES = {
 }
 
 # ===== PDF Settings =====
-PDF_DIR = "../pdf/"
+# Platform-independent path configuration
+# Linux: /home/fourmi103/2025F_HYSCAPE/pdf/
+# Windows: H:\부서\cjh\pdf\
+BASE_DIR = Path(__file__).parent.parent  # Points to 2025F_HYSCAPE directory
+PDF_DIR = str(BASE_DIR / "pdf")
 PDF_TARGET_KEYWORDS = TARGET_KEYWORDS_TECH + TARGET_COMPANIES
 
 # ===== Logging Settings =====
-LOG_DIR = "logs/"
-FAILED_SOURCES_LOG = "logs/failed_sources.txt"
+# Platform-independent path configuration
+LOG_DIR = str(Path(__file__).parent / "logs")
+FAILED_SOURCES_LOG = str(Path(__file__).parent / "logs" / "failed_sources.txt")
 LOG_LEVEL = "INFO"
 
 # ===== Summary Prompt Template =====
@@ -245,5 +250,6 @@ DEFAULT_HEADERS = {
 }
 
 # ===== Directory Creation =====
-os.makedirs(PDF_DIR, exist_ok=True)
-os.makedirs(LOG_DIR, exist_ok=True)
+# Create directories if they don't exist
+Path(PDF_DIR).mkdir(parents=True, exist_ok=True)
+Path(LOG_DIR).mkdir(parents=True, exist_ok=True)
