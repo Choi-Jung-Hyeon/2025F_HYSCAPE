@@ -56,14 +56,8 @@ def run() -> Dict:
         # Initialize Gemini client
         gemini_client = GeminiClient(config.GOOGLE_API_KEY, config.GEMINI_MODEL)
 
-        # Initialize Notion uploader
-        notion_uploader = NotionUploader(
-            api_token=notion_config.NOTION_API_TOKEN,
-            database_id=notion_config.NOTION_DATABASE_ID,
-            properties_map=notion_config.NOTION_PROPERTIES,
-            sentiment_tags=notion_config.SENTIMENT_TAGS,
-            category_tags=notion_config.CATEGORY_TAGS
-        )
+        # Initialize Notion uploader (reads config from dependencies/config.py)
+        notion_uploader = NotionUploader()
 
         # Test Notion connection
         logger.info("[NotionArchive] Testing Notion connection...")
