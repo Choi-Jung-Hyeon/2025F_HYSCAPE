@@ -1,251 +1,411 @@
-# AI 기반 수소 뉴스 자동 요약 및 이메일 발송 프로젝트 (v7.0)
+# Hyscape 수소 산업 자동화 시스템
 
-## 🎯 프로젝트 개요
+![Python](https://img.shields.io/badge/Python-3.8+-blue.svg)
+![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Status](https://img.shields.io/badge/Status-Production-success.svg)
 
-본 프로젝트는 여러 수소 전문 뉴스 사이트에서 최신 기사를 자동으로 수집하고, Google Gemini AI를 이용해 핵심 내용을 요약한 뒤, 지정된 수신자들에게 매일 아침 HTML 형식의 뉴스 브리핑 이메일을 발송하는 파이썬 자동화 시스템입니다.
+> 수소 산업 뉴스 브리핑, 정부지원사업 추천, Notion 아카이브 통합 자동화 시스템
 
-### 🆕 v7.0 주요 업데이트
+---
 
-- ✅ **모듈화된 아키텍처**: source_fetcher 모듈을 완전히 재구성하여 확장성과 유지보수성 향상
-- ✅ **팩토리 패턴**: 새로운 뉴스 소스 추가 시 최소한의 코드 수정으로 가능
-- ✅ **통합 NEWS_SOURCES**: 모든 뉴스 소스(RSS, 웹, 네이버, 구글)를 하나의 설정에서 관리
-- ✅ **향상된 에러 처리**: 실패한 소스를 로그 파일에 자동 기록
-- ✅ **Target 키워드 시스템**: 기술 및 회사 키워드 중심의 스마트 요약
+## 📋 프로젝트 개요
 
-## 📋 주요 기능
+Hyscape의 수소 산업 정보 수집 및 분석을 자동화하는 통합 시스템입니다.
 
-- **다중 소스 통합**: RSS 피드, 웹 크롤링, 네이버/구글 뉴스 검색 통합
-- **AI 기반 자동 요약**: Google Gemini 2.0 Flash를 사용한 정확한 요약
-- **Target 키워드 시스템**: 관심 기업 및 핵심 기술 키워드 자동 추출
-- **모듈화된 설계**: 각 기능이 독립적인 모듈로 분리되어 확장 용이
-- **맞춤형 HTML 이메일**: 관련도 순으로 정렬된 가독성 높은 브리핑
-- **PDF 브리핑 통합**: 월간수소경제 PDF 파일 자동 분석 및 요약
+### 🎯 주요 기능
 
-## 🏗️ 시스템 아키텍처
+1. **📰 일일 뉴스 브리핑**
+   - 수소 산업 뉴스 자동 수집 및 AI 요약
+   - 맞춤형 HTML 이메일 발송
+   - PDF 브리핑 자동 처리
+
+2. **🏛️ 정부지원사업 추천**
+   - K-Startup, IRIS, 기업마당 크롤링
+   - 기술/자격 키워드 기반 필터링
+   - 관련 공고 자동 추천
+
+3. **📚 Notion 아카이브**
+   - PDF 브리핑 자동 업로드
+   - AI 기반 감성 분석 및 카테고리 분류
+   - 키워드 자동 추출
+
+4. **⏰ 자동 스케줄링**
+   - Windows 작업 스케줄러 통합
+   - 평일 오전 9시 자동 실행
+
+---
+
+## 🏗️ 프로젝트 구조
 
 ```
-version7/
-├── source_fetcher/          # 뉴스 수집 모듈 (v7.0 신규 구조)
-│   ├── __init__.py         # 모듈 초기화
-│   ├── base_fetcher.py     # 추상 베이스 클래스
-│   ├── rss_fetcher.py      # RSS 피드 전용
-│   ├── web_scraper_fetcher.py  # 웹 크롤링 전용
-│   ├── api_fetcher.py      # API 기반 Fetcher 부모 클래스
-│   ├── naver_fetcher.py    # 네이버 뉴스 검색
-│   ├── google_fetcher.py   # 구글 뉴스 검색
-│   └── factory.py          # Fetcher 생성 팩토리
+2025F_HYSCAPE/
 │
-├── pdf/                    # PDF 파일 저장 디렉토리
-├── logs/                   # 로그 파일 저장 디렉토리
+├── hyscape_daily_automation/     # 🚀 프로덕션 시스템 (통합 버전)
+│   ├── main_unified.py           # 통합 실행 스크립트
+│   ├── config_production.py      # 메인 설정 (환경변수 사용)
+│   ├── notion_config_production.py  # Notion 설정
+│   ├── .env                      # 크리덴셜 (gitignore됨)
+│   ├── .env.template             # 환경변수 템플릿
+│   │
+│   ├── modules/                  # 모듈 어댑터
+│   │   ├── news_briefing.py      # 뉴스 브리핑 모듈
+│   │   ├── gov_support.py        # 정부지원사업 모듈
+│   │   └── notion_archive.py     # Notion 아카이브 모듈
+│   │
+│   ├── shared/                   # 공유 유틸리티
+│   │   ├── pdf_analyzer.py       # PDF 분석
+│   │   └── gemini_client.py      # Gemini AI 클라이언트
+│   │
+│   ├── dependencies/             # 기존 시스템 복사본
+│   │
+│   ├── RUN_autobriefing.bat      # 일괄 실행 스크립트
+│   ├── SETUP_schedule.bat        # 자동 스케줄 설정
+│   ├── REMOVE_schedule.bat       # 스케줄 제거
+│   └── README_operation_guide.md # 운영 가이드
 │
-├── config.py               # 설정 파일 (API 키, 키워드 등)
-├── main.py                 # 메인 실행 스크립트
-├── content_scraper.py      # 기사 본문 추출
-├── summarizer.py           # AI 요약 및 키워드 추출
-├── notifier.py             # 이메일 발송
-├── pdf_reader.py           # PDF 파일 처리
-├── requirements.txt        # 의존성 패키지
-└── README.md               # 프로젝트 문서
+├── mail_version9/                # 뉴스 브리핑 시스템
+├── government_version2/          # 정부지원사업 크롤러
+├── notion_version3/              # Notion 업로더
+├── experiment_version1/          # 실험 및 분석 (아카이브)
+│
+├── project_archive/              # 이전 버전 아카이브
+│
+├── SECURITY_NOTICE.md            # 보안 가이드
+├── SECURITY_AUDIT_REPORT.md      # 보안 감사 보고서
+├── COMPREHENSIVE_SECURITY_AUDIT.md  # 종합 보안 감사
+│
+└── README.md                     # 이 파일
 ```
 
-## 🚀 설치 및 실행
+---
 
-### 1️⃣ 환경 설정
+## 🚀 빠른 시작
+
+### 1. 프로덕션 시스템 사용 (권장)
 
 ```bash
-# 프로젝트 디렉토리로 이동
-cd version7
+cd hyscape_daily_automation
 
-# 가상환경 생성
-python3 -m venv venv
+# 1. 환경 변수 설정
+cp .env.template .env
+# .env 파일을 편집하여 실제 크리덴셜 입력
 
-# 가상환경 활성화
-source venv/bin/activate  # Linux/WSL
-# venv\Scripts\activate   # Windows
+# 2. 실행
+# Windows:
+RUN_autobriefing.bat
 
-# 라이브러리 설치
-pip install --upgrade pip
-pip install -r requirements.txt
+# Linux/WSL:
+/path/to/venv/bin/python main_unified.py
 ```
 
-### 2️⃣ 설정 파일 수정
-
-`config.py` 파일을 열어 다음 정보를 입력하세요:
-
-```python
-# Google Gemini AI API 키
-GOOGLE_API_KEY = "your-gemini-api-key"
-
-# Gmail 발송 정보
-SENDER_EMAIL = "your-email@gmail.com"
-SENDER_PASSWORD = "your-app-password"  # Gmail 앱 비밀번호
-
-# 수신자 목록
-RECEIVER_EMAIL = [
-    "recipient1@example.com",
-    "recipient2@example.com"
-]
-```
-
-> **⚠️ 중요**: `config.py`에 민감한 정보가 포함되므로 `.gitignore`에 추가하세요!
-
-### 3️⃣ 실행
+### 2. 자동 스케줄 설정 (Windows)
 
 ```bash
-python main.py
+# 관리자 권한으로 실행
+SETUP_schedule.bat
+
+# 평일 오전 9시에 자동 실행됨
 ```
 
-## 📊 워크플로우
+자세한 내용은 [`hyscape_daily_automation/README_operation_guide.md`](hyscape_daily_automation/README_operation_guide.md) 참고
 
-1. **PDF 브리핑 처리** - pdf/ 디렉토리의 PDF 파일 분석
-2. **기사 수집** - 모든 활성화된 소스에서 기사 수집
-3. **본문 추출** - 각 기사 URL에서 본문 텍스트 추출
-4. **AI 요약** - Gemini AI를 통한 핵심 내용 요약
-5. **이메일 발송** - 관련도 순으로 정렬된 HTML 이메일 발송
+---
 
-## 🆕 새로운 뉴스 소스 추가 방법 (v7.0)
+## ⚙️ 환경 설정
 
-### ✅ 방법 1: RSS 피드 (가장 간단!)
+### 필수 요구사항
 
-`config.py`의 `NEWS_SOURCES`에 추가:
+- **Python**: 3.8 이상
+- **OS**: Windows 10/11 또는 Linux (WSL 지원)
+- **인터넷**: API 및 크롤링용
 
-```python
-NEWS_SOURCES = {
-    # 기존 소스들...
-    
-    "Hydrogen Europe": {
-        "url": "https://hydrogeneurope.eu/feed/",
-        "type": "rss",
-        "status": "active"
-    }
-}
+### API 키 발급
+
+1. **Google Gemini API**
+   - https://aistudio.google.com/app/apikey
+   - 무료 할당량 사용 가능
+
+2. **Gmail 앱 비밀번호**
+   - https://myaccount.google.com/apppasswords
+   - 2단계 인증 필요
+
+3. **Notion API** (선택사항)
+   - https://www.notion.so/my-integrations
+   - 데이터베이스 연동 시 필요
+
+### 환경 변수 설정 (.env)
+
+```bash
+# Google Gemini AI
+GOOGLE_API_KEY=your_google_api_key_here
+GEMINI_MODEL=gemini-2.0-flash
+
+# Gmail SMTP
+SENDER_EMAIL=your_email@gmail.com
+SENDER_PASSWORD=your_16_char_app_password
+
+# Notion API (선택)
+NOTION_API_TOKEN=your_notion_token_here
+NOTION_DATABASE_ID=your_database_id_here
 ```
 
-### ✅ 방법 2: 웹 크롤링
+> ⚠️ **중요**: `.env` 파일은 절대 Git에 커밋하지 마세요!
 
-CSS 선택자를 찾아서 추가:
+---
 
-```python
-NEWS_SOURCES = {
-    # 기존 소스들...
-    
-    "새로운 사이트": {
-        "url": "https://example.com/news/",
-        "type": "web",
-        "article_selector": "article.post",
-        "title_selector": "h2.title",
-        "link_selector": "a",
-        "status": "active"
-    }
-}
+## 📊 시스템 워크플로우
+
+```mermaid
+graph LR
+    A[일일 실행 9AM] --> B[PDF 브리핑 처리]
+    B --> C[뉴스 수집 & AI 요약]
+    C --> D[정부지원사업 검색]
+    D --> E[이메일 발송]
+    E --> F[Notion 아카이브]
+    F --> G[완료 로그]
 ```
 
-### ✅ 방법 3: 커스텀 Fetcher
+### 실행 순서
 
-특수한 처리가 필요한 경우 새 Fetcher 클래스 작성:
+1. **PDF 브리핑 분석**: pdf/ 폴더의 PDF 파일 처리
+2. **뉴스 브리핑 수집**: RSS, 웹크롤링, 네이버/구글 검색
+3. **AI 요약 생성**: Gemini AI로 핵심 내용 추출
+4. **정부지원사업 추천**: 관련 공고 필터링
+5. **이메일 발송**: HTML 형식 브리핑 전송
+6. **Notion 업로드**: 분석 결과 아카이브
 
-```python
-# source_fetcher/custom_fetcher.py
-from .base_fetcher import BaseSourceFetcher
-
-class CustomFetcher(BaseSourceFetcher):
-    def fetch_articles(self, max_articles=5):
-        # 커스텀 로직 구현
-        pass
-```
-
-## 📦 기술 스택
-
-- **언어**: Python 3.9+
-- **핵심 라이브러리**:
-  - `google-generativeai` - Gemini AI API
-  - `feedparser` - RSS 피드 파싱
-  - `beautifulsoup4` - HTML 파싱
-  - `requests` - HTTP 요청
-  - `PyPDF2` - PDF 처리
+---
 
 ## 🔧 주요 설정
 
-### Target 키워드 시스템
+### Target 키워드 (config_production.py)
 
 ```python
-# 기술 키워드 (config.py)
+# 기술 키워드
 TARGET_KEYWORDS_TECH = [
-    "PEM 수전해", "AEM 수전해", "연료전지", 
-    "촉매", "전해질막", "그린수소", ...
+    "PEM 수전해", "AEM 수전해", "연료전지",
+    "촉매", "전해질막", "그린수소", "청정수소",
+    "재생에너지", "탄소중립"
 ]
 
-# 관심 기업 (config.py)
-TARGET_COMPANIES = [
-    "Electric Hydrogen", "Ohmium", "Hysata",
-    "삼성중공업", "현대건설", "두산에너빌리티", ...
-]
+# 수집 제한
+MAX_ARTICLES_PER_SOURCE = 3
+MAX_TOTAL_ARTICLES = 5
 ```
 
-### 수집 제한
+### 필터링 전략 (config_production.yaml)
 
-```python
-MAX_ARTICLES_PER_SOURCE = 5   # 소스당 최대 5개
-MAX_TOTAL_ARTICLES = 15       # 전체 최대 15개
-MAX_NAVER_PER_KEYWORD = 3     # 네이버 키워드당 3개
-MAX_GOOGLE_PER_KEYWORD = 3    # 구글 키워드당 3개
+```yaml
+filter_strategies:
+  type_a:  # 기술 중심 (IRIS용)
+    logic: "tech_keywords_required"
+
+  type_b:  # 지원 중심 (K-Startup용)
+    logic: "tech_or_support_and_qualification"
+
+keywords:
+  tech: ["수소", "연료전지", "수전해", ...]
+  support: ["마케팅", "수출", "R&D", ...]
+  qualification: ["성남", "중소기업", ...]
 ```
 
-## 🔄 자동화 (Cron)
+---
 
-매일 오전 8시 자동 실행:
+## 📝 로그 및 모니터링
+
+### 로그 파일
+
+- **통합 로그**: `hyscape_daily_automation/logs/unified_automation.log`
+- **실패한 소스**: `mail_version9/logs/failed_sources.txt`
+
+### 로그 형식
+
+```
+2025-12-18 09:00:00 - news_briefing - INFO - 뉴스 브리핑 시작
+2025-12-18 09:00:05 - news_briefing - INFO - ✓ 5개 기사 수집 완료
+2025-12-18 09:00:10 - gov_support - INFO - ✓ 정부지원사업 3건 추천
+```
+
+---
+
+## 🔐 보안
+
+### Git Repository
+
+- ✅ 모든 민감한 정보 제거 완료
+- ✅ `.gitignore`로 크리덴셜 보호
+- ✅ 정기 보안 감사 실시
+
+### 로컬 파일
+
+- `.env` 파일에 모든 크리덴셜 저장
+- config 파일은 환경변수만 참조
+- 정기적인 비밀번호 순환 권장
+
+자세한 내용은 [`SECURITY_NOTICE.md`](SECURITY_NOTICE.md) 참고
+
+---
+
+## 🛠️ 문제 해결
+
+### Q: 이메일 발송 실패
+
+**해결**: `.env` 파일의 Gmail 앱 비밀번호 확인
+
+### Q: API 키 오류
+
+**해결**: Gemini API 키 유효성 및 할당량 확인
+
+### Q: PDF 처리 실패
+
+**해결**: PDF 파일명 형식 확인 (YYMMDD_title.pdf)
+
+### Q: 정부지원사업 크롤링 실패
+
+**해결**: 웹사이트 구조 변경 가능성 - 스크래퍼 업데이트 필요
+
+더 많은 문제 해결은 [`hyscape_daily_automation/README_operation_guide.md`](hyscape_daily_automation/README_operation_guide.md) 참고
+
+---
+
+## 📦 기술 스택
+
+### Core
+
+- **Python 3.8+**
+- **Google Gemini AI**: 텍스트 요약 및 분석
+- **BeautifulSoup4**: 웹 크롤링
+- **Feedparser**: RSS 피드 파싱
+
+### Infrastructure
+
+- **Windows Task Scheduler**: 자동 실행
+- **WSL**: Linux 호환성
+- **Git**: 버전 관리
+
+### APIs & Services
+
+- **Gmail SMTP**: 이메일 발송
+- **Notion API**: 데이터베이스 연동
+- **Naver/Google Search**: 뉴스 검색
+
+---
+
+## 📈 버전 히스토리
+
+### v1.0 (2025-12-17) - 통합 시스템
+- ✅ mail_version9, government_version2, notion_version3 통합
+- ✅ 프로덕션 크리덴셜 설정
+- ✅ 원클릭 실행 스크립트
+- ✅ 포괄적인 에러 격리
+
+### v1.1 (2025-12-18) - 자동화 및 보안
+- ✅ Windows 작업 스케줄러 통합
+- ✅ 보안 감사 및 Git History 정리
+- ✅ 종합 보안 문서화
+- ✅ 개인정보 완전 제거
+
+---
+
+## 🔄 자동화 (Windows Task Scheduler)
+
+### 자동 스케줄 설정
 
 ```bash
-# crontab 편집
-crontab -e
-
-# 추가
-0 8 * * * cd /path/to/version7 && /path/to/version7/venv/bin/python /path/to/version7/main.py
+# 관리자 권한으로 실행
+cd hyscape_daily_automation
+SETUP_schedule.bat
 ```
 
-## 📝 로그 및 디버깅
+### 스케줄 제거
 
-- **실패한 소스**: `logs/failed_sources.txt`
-- **개별 Fetcher 테스트**:
-  ```bash
-  python source_fetcher/rss_fetcher.py
-  python source_fetcher/naver_fetcher.py
-  ```
+```bash
+REMOVE_schedule.bat
+```
+
+### 수동 확인
+
+- 작업 스케줄러 → 작업 스케줄러 라이브러리
+- 작업 이름: **Hyscape_Daily_Briefing**
+- 실행 시간: 평일 오전 9:00
+
+---
+
+## 📚 문서
+
+- **운영 가이드**: [`hyscape_daily_automation/README_operation_guide.md`](hyscape_daily_automation/README_operation_guide.md)
+- **보안 가이드**: [`SECURITY_NOTICE.md`](SECURITY_NOTICE.md)
+- **보안 감사 보고서**: [`COMPREHENSIVE_SECURITY_AUDIT.md`](COMPREHENSIVE_SECURITY_AUDIT.md)
+- **배포 가이드**: [`hyscape_daily_automation/WINDOWS_DEPLOYMENT.md`](hyscape_daily_automation/WINDOWS_DEPLOYMENT.md)
+
+---
 
 ## 🎯 향후 개발 계획
 
-- [ ] **Phase 2**: 노션 API 연동 (연도별 이슈 정리)
-- [ ] **Phase 3**: 추가 해외 소스 확장
-- [ ] **Phase 4**: 테스트 코드 작성 및 CI/CD 구축
+### 단기 (1개월)
 - [ ] 웹 대시보드 개발
 - [ ] 데이터베이스 연동 (중복 방지)
+- [ ] 추가 정부지원사업 사이트 크롤러
+
+### 중기 (3개월)
+- [ ] 머신러닝 기반 추천 시스템
+- [ ] 실시간 알림 기능
+- [ ] API 서버 구축
+
+### 장기 (6개월)
+- [ ] 다국어 지원
+- [ ] 모바일 앱 개발
+- [ ] 클라우드 배포 (AWS/GCP)
+
+---
+
+## 🤝 기여
+
+이 프로젝트는 Hyscape 내부 프로젝트입니다.
+
+### 개발 프로세스
+
+1. 기능 브랜치 생성
+2. 코드 작성 및 테스트
+3. Pull Request 생성
+4. 코드 리뷰 및 병합
+
+---
 
 ## 📄 라이선스
 
 MIT License
 
----
-
-## 💡 문제 해결 (Troubleshooting)
-
-### Q: "ModuleNotFoundError: No module named 'source_fetcher'" 오류
-
-**A**: 가상환경이 활성화되어 있는지 확인하고, `pip install -r requirements.txt` 재실행
-
-### Q: 특정 소스에서 기사를 가져오지 못함
-
-**A**: `logs/failed_sources.txt` 파일 확인 후 해당 소스의 status를 "testing"으로 변경하여 테스트
-
-### Q: Gemini API 요금이 걱정됨
-
-**A**: `MAX_TOTAL_ARTICLES`를 줄이거나, Gemini 2.0 Flash 모델 사용 (무료 한도 높음)
-
-### Q: 네이버/구글 검색 결과가 없음
-
-**A**: 검색 키워드를 조정하거나, 헤더 설정 확인
+Copyright (c) 2025 Hyscape
 
 ---
 
-**제작자**: Hyscape 인턴십 프로젝트  
-**버전**: 7.0 (모듈화 아키텍처)  
-**최종 업데이트**: 2025-10-22
+## 📞 문의
+
+- **개발팀**: Hyscape 기술개발팀
+- **이메일**: Contact via internal channels
+
+---
+
+## ⚠️ 주의사항
+
+1. **크리덴셜 보안**
+   - `.env` 파일은 절대 Git에 커밋하지 마세요
+   - 정기적으로 비밀번호를 변경하세요
+   - API 키 사용량을 모니터링하세요
+
+2. **데이터 처리**
+   - 개인정보 수집/저장 최소화
+   - 로그 파일 정기 삭제
+   - 데이터 보안 정책 준수
+
+3. **시스템 운영**
+   - 정기적인 의존성 업데이트
+   - 백업 정책 수립
+   - 에러 로그 모니터링
+
+---
+
+**제작**: Hyscape 인턴십 프로젝트
+**버전**: 1.1
+**최종 업데이트**: 2025-12-18
