@@ -2,13 +2,64 @@
 ###########
 # 가상환경 폴더
 venv/
+env/
+.venv/
 
 # 파이썬 캐시 파일
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
 
-# 설정 파일 (API 키, 비밀번호 등)
+# 환경 변수 및 민감한 정보 (API 키, 비밀번호 등)
+.env
+.env.*
+!.env.template
+!.env.example
 config.py
+**/secrets/
+**/credentials/
+
+# 로그 파일
+*.log
+logs/
+*.log.*
+
+# 데이터 파일
+*.pdf
+pdf/
+data/
+archive/
+archived/
+*.xlsx
+*.csv
+*.pkl
+*.h5
+*.npy
 
 # VS Code 설정 폴더
 .vscode/
+
+# OS 관련
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Notion 데이터베이스 백업
+notion_backup/
+
+# 테스트 파일
+test_output/
+*.test.py
+
+# 실험 데이터 및 모델
+experiment_version*/data/
+experiment_version*/models/
+
+# Jupyter notebooks with potential secrets
+project_archive/version*/ArticleScrab*.ipynb
+project_archive/version*/sendingmail.py
+
+# Version archive config files
+version*/config.py
+project_archive/version*/config.py
