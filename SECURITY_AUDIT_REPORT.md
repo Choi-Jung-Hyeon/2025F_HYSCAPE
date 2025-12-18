@@ -10,7 +10,7 @@
 
 ### 1. Gmail 앱 비밀번호 노출
 
-**노출된 비밀번호**: `invg xbzj yjgq hgju`
+**노출된 비밀번호**: `REDACTED_GMAIL_PASSWORD`
 
 **위치**:
 - ✅ `hyscape_daily_automation/README_operation_guide.md:72` (수정 완료)
@@ -18,7 +18,7 @@
 - 🔴 `project_archive/version1/ArticleScrab_v2.ipynb` (git 추적 중)
 - 🔴 `project_archive/version1/sendingmail.py` (git 추적 중)
 
-**연관 이메일**: `junghyun6555@gmail.com`
+**연관 이메일**: `DEVELOPER_EMAIL`
 
 **위험도**:
 - 외부인이 이 비밀번호로 Gmail 계정에 접근 가능
@@ -34,8 +34,8 @@
 ### 2. Google Gemini API 키 노출
 
 **노출된 API 키**:
-1. `AIzaSyBtsEROjvmN27jGHboUmfZTEAhk5wk1NoY` (version4)
-2. `AIzaSyBCstZm4U379KvYTO-tKJAVFq7JFJ9-W0A` (version1)
+1. `REDACTED_API_KEY_1` (version4)
+2. `REDACTED_API_KEY_2` (version1)
 
 **위치**:
 - 🔴 Git History: 커밋 `02ec3b5` - `version4/config.py` (삭제됨, 히스토리 남음)
@@ -63,7 +63,7 @@
 
 #### 개인 이메일:
 - `fourmi103@g.skku.edu` (개발자 - 학교 이메일)
-- `junghyun6555@gmail.com` (개발자 - 개인 Gmail)
+- `DEVELOPER_EMAIL` (개발자 - 개인 Gmail)
 - `eguitar97@naver.com`
 
 **위치**:
@@ -156,7 +156,7 @@ project_archive/version*/sendingmail.py
 #### A. Gmail 앱 비밀번호
 ```bash
 1. https://myaccount.google.com/apppasswords 접속
-   (계정: junghyun6555@gmail.com)
+   (계정: DEVELOPER_EMAIL)
 2. "Hyscape Automation" 앱 비밀번호 삭제
 3. 새 앱 비밀번호 생성
 4. 업데이트:
@@ -168,8 +168,8 @@ project_archive/version*/sendingmail.py
 ```bash
 1. https://aistudio.google.com/app/apikey 접속
 2. 노출된 키 2개 삭제:
-   - AIzaSyBtsEROjvmN27jGHboUmfZTEAhk5wk1NoY
-   - AIzaSyBCstZm4U379KvYTO-tKJAVFq7JFJ9-W0A
+   - REDACTED_API_KEY_1
+   - REDACTED_API_KEY_2
 3. 새 API 키 생성
 4. 업데이트:
    hyscape_daily_automation/.env
@@ -222,9 +222,9 @@ git filter-repo --invert-paths \
 
 # 또는 민감한 문자열 치환
 git filter-repo --replace-text <(cat <<EOF
-invg xbzj yjgq hgju==>REDACTED_PASSWORD
-AIzaSyBtsEROjvmN27jGHboUmfZTEAhk5wk1NoY==>REDACTED_API_KEY
-AIzaSyBCstZm4U379KvYTO-tKJAVFq7JFJ9-W0A==>REDACTED_API_KEY
+REDACTED_GMAIL_PASSWORD==>REDACTED_PASSWORD
+REDACTED_API_KEY_1==>REDACTED_API_KEY
+REDACTED_API_KEY_2==>REDACTED_API_KEY
 EOF
 )
 

@@ -13,7 +13,7 @@ Git 저장소 검토 결과, 다음의 민감한 정보가 노출되어 있었�
 
 ### 2. Google API 키 노출 (Git History)
 - **위치**: Git 커밋 히스토리 (`0df4d7c` - `version4/config.py`)
-- **노출된 키**: `AIzaSyBtsEROjvmN27jGHboUmfZTEAhk5wk1NoY`
+- **노출된 키**: `REDACTED_API_KEY_1`
 - **영향**: Gemini API 무단 사용, 과금 발생 가능
 
 ### 3. 개인 이메일 주소
@@ -70,7 +70,7 @@ pip install git-filter-repo
 git filter-repo --path version4/config.py --invert-paths
 
 # 또는 특정 문자열 치환
-git filter-repo --replace-text <(echo "AIzaSyBtsEROjvmN27jGHboUmfZTEAhk5wk1NoY==>REDACTED")
+git filter-repo --replace-text <(echo "REDACTED_API_KEY_1==>REDACTED")
 ```
 
 **⚠️ 주의**: 이 작업은 Git 히스토리를 변경하므로:
